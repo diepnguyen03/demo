@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sapoche — Báo cáo tiến độ đơn hàng v3</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --primary:#1A3B2E;--accent:#2D9E6B;--accent-dim:rgba(45,158,107,0.12);
+  --nav-bg:#0F2418;--page-bg:#F2F4F0;--surface:#fff;--surface2:#F0EDE6;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --text:#0F2418;--muted:#637A6E;--muted2:#94A3B8;
+  --ok:#15803D;--ok-bg:#DCFCE7;
+  --warn:#B45309;--warn-bg:#FEF3C7;
+  --danger:#B91C1C;--danger-bg:#FEE2E2;
+  --info:#1D4ED8;--info-bg:#DBEAFE;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;color:var(--text);display:flex;height:100vh;overflow:hidden;background:var(--page-bg);}
+
+/* NAV */
+#nav{width:210px;background:var(--nav-bg);display:flex;flex-direction:column;flex-shrink:0;}
+.logo{padding:16px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.logo-brand{color:rgba(255,255,255,0.4);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+.logo-name{color:#fff;font-size:15px;font-weight:700;margin-top:3px;}
+.sec{padding:14px 14px 4px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 12px;cursor:pointer;color:rgba(255,255,255,0.55);border-radius:6px;margin:1px 6px;font-size:12px;transition:all .15s;}
+.ni:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.ni.active{background:rgba(45,158,107,0.22);color:#fff;border-left:3px solid var(--accent);margin-left:3px;font-weight:600;}
+.ni svg{flex-shrink:0;width:14px;height:14px;}
+.nav-btm{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,0.07);}
+.nav-btm label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,0.3);display:block;margin-bottom:4px;}
+.nav-btm select{width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:6px 9px;border-radius:6px;font-size:11px;margin-bottom:8px;cursor:pointer;}
+.nav-btm select option{background:#0F2418;}
+
+/* LAYOUT */
+#main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:11px 22px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.tb-title{font-size:15px;font-weight:700;}
+.tb-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.tb-actions{display:flex;gap:7px;align-items:center;}
+.btn{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--muted);}
+.btn-primary{background:var(--primary);color:#fff;}
+.content{padding:16px 22px 32px;}
+.page{display:none;}.page.active{display:block;}
+
+/* GRID */
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px;}
+.span2{grid-column:span 2;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.card h3{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;}
+.card h3 .sub{font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;}
+
+/* KPI */
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 15px;position:relative;}
+.kpi-tl{position:absolute;top:9px;right:9px;width:8px;height:8px;border-radius:50%;}
+.tl-g{background:#22C55E;}.tl-y{background:#F59E0B;}.tl-r{background:#EF4444;}.tl-b{background:#60A5FA;}
+.kpi-lbl{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.kpi-val{font-size:22px;font-weight:700;color:var(--text);line-height:1;}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:4px;}
+.kpi-sub.up{color:var(--ok);}.kpi-sub.dn{color:var(--danger);}.kpi-sub.wn{color:var(--warn);}
+
+/* PILL */
+.pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;}
+.ps{background:var(--ok-bg);color:var(--ok);}
+.pd{background:var(--danger-bg);color:var(--danger);}
+.pw{background:var(--warn-bg);color:var(--warn);}
+.pi{background:var(--info-bg);color:var(--info);}
+.pn{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+
+/* TABLE */
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;}
+.tcard-hdr{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-bottom:1px solid var(--border);}
+.tcard-hdr h3{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+table{width:100%;border-collapse:collapse;font-size:11.5px;}
+th{padding:7px 11px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap;}
+td{padding:9px 11px;border-bottom:1px solid rgba(0,0,0,0.04);color:var(--text);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr.clickable:hover td{background:var(--surface2);cursor:pointer;}
+.num{text-align:right;font-variant-numeric:tabular-nums;}
+.red{color:var(--danger);font-weight:700;}.grn{color:var(--ok);}.orn{color:var(--warn);font-weight:700;}
+.pb{display:flex;align-items:center;gap:6px;}
+.pbr{flex:1;height:4px;background:#E2E8F0;border-radius:2px;overflow:hidden;min-width:50px;}
+.pbf{height:100%;border-radius:2px;}
+
+/* TL LEGEND */
+.tl-leg{display:flex;align-items:center;gap:14px;font-size:10px;color:var(--muted);margin-bottom:12px;padding:6px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border);flex-wrap:wrap;}
+.tl-leg strong{color:var(--text);margin-right:2px;}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;}
+
+/* LEGEND ROW */
+.leg{display:flex;gap:12px;font-size:10px;color:var(--muted);margin-top:7px;flex-wrap:wrap;}
+.ldot{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:3px;vertical-align:middle;}
+
+/* HEATMAP KH */
+.hm{width:100%;border-collapse:collapse;font-size:11px;}
+.hm th{padding:6px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2);text-align:center;white-space:nowrap;}
+.hm th.l{text-align:left;}
+.hm td{border-bottom:1px solid rgba(0,0,0,0.04);padding:0;}
+.hm td.rn{padding:8px 10px;font-weight:600;white-space:nowrap;}
+.hm td.rn small{display:block;font-weight:400;font-size:10px;color:var(--muted);}
+.hmc{padding:7px 10px;text-align:center;font-size:10px;font-weight:700;}
+.hm-ok{background:var(--ok-bg);color:var(--ok);}
+.hm-dn{background:var(--danger-bg);color:var(--danger);}
+.hm-wn{background:var(--warn-bg);color:var(--warn);}
+.hm-nd{background:#F8FAFC;color:var(--muted2);}
+.hm-tot{background:#EEF2FF;color:#3730A3;font-weight:700;}
+
+/* GANTT KH */
+.gantt-kh{width:100%;border-collapse:collapse;font-size:11px;}
+.gantt-kh th{padding:7px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--border);text-align:center;white-space:nowrap;}
+.gantt-kh th.l{text-align:left;}
+.gantt-kh td{border-bottom:1px solid rgba(0,0,0,0.04);padding:0;}
+.gantt-kh td.on{padding:8px 10px;font-weight:600;white-space:nowrap;font-size:11px;}
+.gantt-kh td.on small{display:block;font-weight:400;font-size:10px;color:var(--muted);}
+.gc{padding:6px 8px;text-align:center;font-size:10px;font-weight:700;border-right:1px solid rgba(0,0,0,0.04);}
+.gc-done{background:var(--ok-bg);color:var(--ok);}
+.gc-act{background:var(--warn-bg);color:var(--warn);}
+.gc-late{background:var(--danger-bg);color:var(--danger);}
+.gc-todo{background:#F8FAFC;color:var(--muted2);}
+
+/* ORDER DETAIL TABLE */
+.od-tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.od-tbl th{padding:7px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2);}
+.od-tbl td{padding:9px 10px;border-bottom:1px solid rgba(0,0,0,0.04);vertical-align:middle;}
+.od-tbl tr:last-child td{border-bottom:none;}
+.od-tbl tr:hover td{background:var(--surface2);}
+</style>
+</head>
+<body>
+
+<div id="nav">
+  <div class="logo">
+    <div class="logo-brand">Sapoche · QL Đơn hàng</div>
+    <div class="logo-name">Tiến độ 2026</div>
+  </div>
+  <div class="sec">Báo cáo</div>
+  <div class="ni active" id="n1" onclick="go('p1',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Tổng quan
+  </div>
+  <div class="ni" id="n2" onclick="go('p2',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    Chi tiết theo khách
+  </div>
+  <div class="nav-btm">
+    <label>Kỳ báo cáo</label>
+    <select><option>Tháng 6/2026</option><option>Tháng 5/2026</option><option>Quý 2/2026</option></select>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div id="loadOverlay" style="position:fixed;inset:0;background:rgba(15,36,24,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px">
+  <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.2);border-top-color:#2D9E6B;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+  <div id="loadMsg" style="color:#fff;font-size:13px;font-weight:600">Đang tải dữ liệu...</div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</div>
+
+<div id="main">
+
+<!-- =========== PAGE 1: TỔNG QUAN =========== -->
+<div id="p1" class="page active">
+<div class="topbar">
+  <div>
+    <div class="tb-title">Tổng quan tiến độ đơn hàng</div>
+    <div class="tb-sub" id="lastUpdate">Đang tải...</div>
+  </div>
+  <div class="tb-actions">
+    <button class="btn btn-outline" onclick="loadAllData()">↻ Làm mới</button>
+  </div>
+</div>
+<div class="content">
+
+  <!-- TL LEGEND -->
+  <div class="tl-leg">
+    <strong>Traffic light:</strong>
+    <span><span class="dot" style="background:#22C55E"></span>Đúng tiến độ — còn ≥ 5 ngày đến LXH</span>
+    <span><span class="dot" style="background:#F59E0B"></span>Cần theo dõi — còn 1–4 ngày hoặc đang chậm bước</span>
+    <span><span class="dot" style="background:#EF4444"></span>Nguy cơ trễ — quá LXH hoặc GC chưa giao đúng hẹn</span>
+  </div>
+
+  <!-- KPI ROW — được render bởi JS -->
+  <div class="g6" id="kpiArea" style="margin-bottom:14px">
+    <!-- Placeholder khi chưa load -->
+    <div class="kpi"><div class="kpi-lbl">Đang tải...</div><div class="kpi-val" style="color:var(--muted)">—</div></div>
+  </div>
+
+  <!-- HÀNG 1: 3 chart — Đơn theo tháng | Dây theo tháng | Funnel QT2 -->
+  <div class="g3">
+    <div class="card">
+      <h3>Số đơn hoàn thành / tháng <span class="sub">T1–T7 (dự báo)</span></h3>
+      <div style="position:relative;height:190px"><canvas id="cTrend"></canvas></div>
+      <div class="leg">
+        <span><span class="ldot" style="background:#2D9E6B"></span>Thực tế</span>
+        <span><span class="ldot" style="background:#E2E8F0;border:1px solid #94A3B8"></span>Kế hoạch</span>
+        <span><span class="ldot" style="background:rgba(45,158,107,0.3);border:1px dashed #2D9E6B"></span>Dự báo T7</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Số lượng dây gia công / tháng <span class="sub">nghìn dây · T1–T7</span></h3>
+      <div style="position:relative;height:190px"><canvas id="cDayThang"></canvas></div>
+      <div class="leg">
+        <span><span class="ldot" style="background:#1A3B2E"></span>Thực tế (k dây)</span>
+        <span><span class="ldot" style="background:#CBD5E0"></span>Kế hoạch</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Funnel đơn hàng theo bước QT2 <span class="sub">tổng 36 đơn</span></h3>
+      <div id="funnelChart" style="padding:4px 0"></div>
+    </div>
+  </div>
+
+  <!-- HÀNG 2: 3 chart — Trễ theo bước | Đến hạn 7 ngày theo bước | Pie nguyên nhân -->
+  <div class="g3">
+    <div class="card">
+      <h3>Số đơn trễ tại mỗi bước QT2</h3>
+      <div style="position:relative;height:200px"><canvas id="cTreBC"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Đơn đến hạn trong 7 ngày tới / bước</h3>
+      <div style="position:relative;height:200px"><canvas id="cDenHan"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Nguyên nhân trễ <span class="sub">T6 · 8 đơn</span></h3>
+      <div style="position:relative;height:190px"><canvas id="cCause"></canvas></div>
+    </div>
+  </div>
+
+  <!-- HEATMAP THEO KHÁCH HÀNG -->
+  <div class="tcard" style="margin-bottom:14px">
+    <div class="tcard-hdr"><h3>Heatmap tiến độ theo khách hàng — T6/2026</h3></div>
+    <table class="hm" id="hmTable">
+      <thead>
+        <tr>
+          <th class="l">Khách hàng</th>
+          <th>Tổng đơn</th>
+          <th>Tổng dây</th>
+          <th>Đã hoàn thành</th>
+          <th>Đang xử lý</th>
+          <th>Trễ hẹn</th>
+          <th>Tỉ lệ đúng hẹn</th>
+          <th>LXH gần nhất</th>
+          <th>Tình trạng</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- BẢNG TỔNG HỢP ĐƠN HÀNG -->
+  <div class="tcard">
+    <div class="tcard-hdr">
+      <h3>Tổng hợp đơn hàng đang xử lý — T6/2026</h3>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline" onclick="filterSt('all',this)" style="font-size:10px;padding:4px 10px">Tất cả</button>
+        <button class="btn btn-outline" onclick="filterSt('late',this)" style="font-size:10px;padding:4px 10px">Trễ</button>
+        <button class="btn btn-outline" onclick="filterSt('ok',this)" style="font-size:10px;padding:4px 10px">Đúng hẹn</button>
+        <button class="btn btn-outline" onclick="filterSt('done',this)" style="font-size:10px;padding:4px 10px">Hoàn thành</button>
+      </div>
+    </div>
+    <table id="mainTbl">
+      <thead>
+        <tr>
+          <th>Mã đơn hàng</th><th>Khách</th><th class="num">Tổng dây</th>
+          <th>LXH</th><th>Còn lại</th><th style="min-width:90px">Tiến độ</th>
+          <th>Bước hiện tại</th><th>GC hẹn</th><th>Nguyên nhân trễ</th><th>Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody><!-- JS renders here --></tbody>
+    </table>
+    <div style="padding:8px 12px;font-size:10px;color:var(--muted)">* Click vào đơn để xem chi tiết theo khách hàng. Tiến độ % = bước QT2 đã xong / 8 bước.</div>
+  </div>
+
+</div><!-- /content p1 -->
+</div><!-- /p1 -->
+
+<!-- =========== PAGE 2: CHI TIẾT THEO KHÁCH =========== -->
+<div id="p2" class="page">
+<div class="topbar">
+  <div>
+    <div class="tb-title" id="p2Title">Chi tiết theo khách hàng — K128</div>
+    <div class="tb-sub">Tiến độ đơn hàng · Gantt · Chi tiết từng đơn</div>
+  </div>
+  <div class="tb-actions">
+    <select id="khSelect" onchange="loadKH(this.value)" style="padding:6px 11px;border-radius:6px;border:1px solid var(--border2);font-size:12px;background:#fff;cursor:pointer;">
+      <option value="K1-BB">K1-BB</option>
+      <option value="K128">K128</option>
+      <option value="K51B">K51B</option>
+      <option value="K95">K95</option>
+      <option value="K172">K172</option>
+      <option value="K76">K76</option>
+    </select>
+  </div>
+</div>
+<div class="content">
+
+  <!-- KPI cards khách hàng -->
+  <div class="g5" id="khKPI"></div>
+
+  <!-- Gantt bước × đơn hàng -->
+  <div class="tcard" style="margin-bottom:14px">
+    <div class="tcard-hdr"><h3 id="ganttTitle">Gantt tiến độ — bước QT2 × đơn hàng</h3><span style="font-size:10px;color:var(--muted)"><span class="dot" style="background:var(--ok)"></span>Xong <span class="dot" style="background:var(--warn);margin-left:6px"></span>Đang xử lý <span class="dot" style="background:var(--danger);margin-left:6px"></span>Trễ/Chặn <span class="dot" style="background:var(--muted2);margin-left:6px"></span>Chưa bắt đầu</span></div>
+    <div style="overflow-x:auto"><table class="gantt-kh" id="ganttKH"></table></div>
+  </div>
+
+  <!-- Chi tiết đơn hàng — bước dọc -->
+  <div class="tcard">
+    <div class="tcard-hdr">
+      <h3 id="odTitle">Chi tiết đơn hàng</h3>
+      <select id="orderFilter" onchange="loadOrderDetail(this.value)" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);font-size:11px;background:#fff;cursor:pointer;"></select>
+    </div>
+
+    <!-- Thông tin sản lượng đơn hàng -->
+    <div id="odSanLuong" style="display:grid;grid-template-columns:repeat(6,1fr);gap:0;border-bottom:1px solid var(--border)"></div>
+
+    <!-- Bảng các bước -->
+    <table id="odStepTbl" style="width:100%;border-collapse:collapse;font-size:11.5px">
+      <thead>
+        <tr>
+          <th style="width:36px;padding:7px 10px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2)">Bước</th>
+          <th style="padding:7px 10px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2)">Tên bước (QT2)</th>
+          <th style="padding:7px 10px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2)">Ngày bắt đầu</th>
+          <th style="padding:7px 10px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2)">Ngày hoàn thành</th>
+          <th style="padding:7px 10px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2)">Người phụ trách</th>
+          <th style="padding:7px 10px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2)">Trạng thái</th>
+          <th style="padding:7px 10px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2)">Ghi chú</th>
+        </tr>
+      </thead>
+      <tbody id="odStepBody"></tbody>
+    </table>
+  </div>
+
+</div>
+</div><!-- /p2 -->
+
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONFIG — thay SHEET_ID tương ứng nếu đổi file
+// ═══════════════════════════════════════════════════════════
+const SHEETS = {
+  file1: '1sgP1Pk-sqVkCnU9oDlPO27EbjtZD2ZgWzXxxtns8wZ4', // Ticket tổng hợp (QT1+QT2)
+  file2: '1XqEIrPzdDxNbndjCHTDbOmuH8W1zidPHYVBaS390ILk', // Chi tiết sản phẩm đơn hàng gốc
+};
+
+// Mapping cột service → bước QT2 (index 0-7)
+// Nếu cột service đó có dữ liệu → bước đó đã xong (state=done)
+const SVC_STEP_MAP = [
+  null,                              // Bước 1: Ban đầu — luôn done nếu ticket tồn tại
+  null,                              // Bước 2: TH trả lời — luôn done nếu ticket tồn tại
+  null,                              // Bước 3: XLĐH+GC — tính từ stage_name
+  'service_lich_hen_giao_cua_gc',    // Bước 4: GC giao
+  'service_kho_bao_giao_hop_label',  // Bước 5: Kho CB
+  'service_lich_hen_giao_htdg',      // Bước 6: HTĐG
+  'service_htdg_bao_lich_hen_giao',  // Bước 7: TH lịch
+  'service_lich_hen_giao_hoan_thanh',// Bước 8: Hoàn thành
+];
+
+const STEP_NAMES = [
+  'XLĐH xử lý thông tin ban đầu',
+  'TH báo thông tin đáp lại',
+  'XLĐH làm việc với GC xác nhận',
+  'GC giao hàng — Kho nhận',
+  'Kho CB — Sàn HT chuẩn bị',
+  'HTĐG đóng gói — Dán label',
+  'HTĐG báo lịch hẹn giao',
+  'XLĐH tổng hợp lịch — Hoàn thành',
+];
+const STEP_OWNERS = ['XLĐH','TH','XLĐH','Kho','Kho + Sàn','HTĐG','HTĐG','XLĐH'];
+
+// ═══════════════════════════════════════════════════════════
+// FETCH CSV từ Google Sheet (published)
+// ═══════════════════════════════════════════════════════════
+function csvUrl(sheetId, sheetName = '') {
+  const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+  return sheetName ? `${base}&sheet=${encodeURIComponent(sheetName)}` : base;
+}
+
+async function fetchCSV(sheetId, sheetName = '') {
+  const url = csvUrl(sheetId, sheetName);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Fetch failed: ${url}`);
+  const text = await res.text();
+  return parseCSV(text);
+}
+
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (!lines.length) return [];
+  const headers = parseCSVRow(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = parseCSVRow(line);
+    const obj = {};
+    headers.forEach((h, i) => { obj[h.trim()] = (vals[i] || '').trim(); });
+    return obj;
+  }).filter(r => Object.values(r).some(v => v));
+}
+
+function parseCSVRow(line) {
+  const res = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === ',' && !inQ) { res.push(cur); cur = ''; }
+    else cur += c;
+  }
+  res.push(cur);
+  return res;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PARSE ticket name → mã đơn + mã KH + LXH
+// Format: "26. K1-BB-008-26-0327-brown - LXH: 08/05/2026"
+// ═══════════════════════════════════════════════════════════
+function parseName(name) {
+  if (!name) return null;
+  // Lấy LXH
+  const lxhMatch = name.match(/LXH[:\s]+(\d{2}\/\d{2}\/\d{4})/i);
+  const lxh = lxhMatch ? lxhMatch[1] : null;
+  // Lấy mã đơn: pattern KXX-XX-XXX-XX (ví dụ K1-BB-008-26, K172-NC-003-26)
+  const maMatch = name.match(/\b(K[\w\-]+-\d{3}-\d{2})\b/i);
+  const maDon = maMatch ? maMatch[1].toUpperCase() : null;
+  // Lấy mã KH từ maDon (phần trước -XXX-YY)
+  const khMatch = maDon ? maDon.match(/^(K[\w\-]+)-\d{3}-\d{2}$/) : null;
+  // Lấy phần mô tả ngắn (sau mã, trước LXH)
+  let desc = '';
+  if (maDon) {
+    const afterMa = name.slice(name.indexOf(maDon) + maDon.length);
+    desc = afterMa.replace(/\s*-\s*LXH.*$/i,'').replace(/^[\s\-]+/,'').split('-').slice(1).join(' ').trim();
+  }
+  return { maDon, kh: khMatch ? khMatch[1] : null, lxh, desc };
+}
+
+// ═══════════════════════════════════════════════════════════
+// TÍNH BƯỚC QT2 từ các cột service
+// ═══════════════════════════════════════════════════════════
+function calcStepStatus(row) {
+  // Bước 1: luôn done (ticket đã tạo)
+  // Bước 2: done nếu service_khach_hang có data
+  // Bước 3: done nếu service_so_don_hang có data
+  // Bước 4-8: dựa vào SVC_STEP_MAP
+  const steps = [3, 0, 0, 0, 0, 0, 0, 0]; // default: chỉ bước 1 done
+
+  if (row['service_khach_hang'] || row['service_so_don_hang']) steps[1] = 3; // B2 done
+  if (row['service_so_don_hang'] && row['service_thong_tin_tong']) steps[2] = 3; // B3 done
+
+  SVC_STEP_MAP.forEach((col, i) => {
+    if (i >= 3 && col && row[col]) steps[i] = 3;
+  });
+
+  // Tìm bước đang active = bước done cuối cùng + 1
+  let lastDone = -1;
+  steps.forEach((s, i) => { if (s === 3) lastDone = i; });
+  if (lastDone < 7) steps[lastDone + 1] = 1; // bước tiếp theo = active
+
+  return steps;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TÍNH NGÀY TRỄ
+// ═══════════════════════════════════════════════════════════
+function dayDiff(lxhStr) {
+  if (!lxhStr) return null;
+  const [d, m, y] = lxhStr.split('/').map(Number);
+  const lxh = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.floor((today - lxh) / 86400000);
+}
+
+function fmtDiff(diff) {
+  if (diff === null) return '—';
+  if (diff > 0) return `-${diff} ngày`;
+  if (diff < 0) return `+${Math.abs(diff)} ngày`;
+  return 'Hôm nay';
+}
+
+// ═══════════════════════════════════════════════════════════
+// BUILD DATA từ CSV rows
+// Lấy row mới nhất của mỗi ticket (by received_at)
+// ═══════════════════════════════════════════════════════════
+function buildTicketMap(rows) {
+  const map = {};
+  rows.forEach(row => {
+    const id = row['ticket_id'];
+    if (!id) return;
+    const existing = map[id];
+    if (!existing || row['received_at'] > existing['received_at']) {
+      map[id] = row;
+    }
+  });
+  return map;
+}
+
+function buildOrders(ticketMap, detailRows) {
+  // Group detail rows by Mã phiếu
+  const detailByPhieu = {};
+  detailRows.forEach(r => {
+    const mp = r['Mã phiếu'];
+    if (!mp) return;
+    if (!detailByPhieu[mp]) detailByPhieu[mp] = [];
+    // Deduplicate by row No. (keep latest updated_at)
+    const no = r['No.'];
+    const existing = detailByPhieu[mp].find(x => x['No.'] === no);
+    if (!existing || r['updated_at'] > existing['updated_at']) {
+      detailByPhieu[mp] = detailByPhieu[mp].filter(x => x['No.'] !== no);
+      detailByPhieu[mp].push(r);
+    }
+  });
+
+  const orders = [];
+  Object.values(ticketMap).forEach(row => {
+    const parsed = parseName(row['name']);
+    if (!parsed || !parsed.maDon) return;
+    // Bỏ qua ticket demo / copy
+    if (/demo|copy/i.test(row['name'])) return;
+
+    const stepStatus = calcStepStatus(row);
+    const doneBuoc = stepStatus.filter(s => s === 3).length;
+    const pct = Math.round(doneBuoc / 8 * 100);
+    const diff = dayDiff(parsed.lxh);
+    const isHoanThanh = stepStatus[7] === 3;
+    const st = isHoanThanh ? 'done' : (diff !== null && diff > 0 ? 'late' : 'ok');
+
+    // Số dây từ service_khach_hang: "K172 #5,940 dây" → 5940
+    const khRaw = row['service_khach_hang'] || '';
+    const dayMatch = khRaw.match(/#([\d,\.]+)/);
+    const totalDay = dayMatch ? parseInt(dayMatch[1].replace(/[,\.]/g,'')) : 0;
+
+    // Mã KH sạch
+    const khClean = parsed.kh || (khRaw.split(/\s/)[0]) || '—';
+
+    // Bước hiện tại
+    let currentBuoc = 1;
+    stepStatus.forEach((s, i) => { if (s === 1) currentBuoc = i + 1; });
+
+    // Detail sản phẩm từ file 2
+    const details = detailByPhieu[row['ticket_id']] || [];
+
+    // Timestamps từ service fields
+    const gcDate = row['service_lich_hen_giao_cua_gc'] || '—';
+    const khoDate = row['service_kho_bao_giao_hop_label'] || '—';
+    const htdgDate = row['service_lich_hen_giao_htdg'] || '—';
+    const htDate = row['service_lich_hen_giao_hoan_thanh'] || '—';
+
+    orders.push({
+      id: parsed.maDon,
+      name: parsed.desc || parsed.maDon,
+      kh: khClean,
+      total: totalDay,
+      lxh: parsed.lxh || '—',
+      diff,
+      pct,
+      st,
+      stepStatus,
+      currentBuoc,
+      gcDate,
+      khoDate,
+      htdgDate,
+      htDate,
+      created: (row['received_at'] || '').substring(0, 8),
+      ticketId: row['ticket_id'],
+      details,
+    });
+  });
+
+  // Sort: late trước, rồi ok, rồi done; trong mỗi nhóm sort theo diff giảm dần
+  orders.sort((a, b) => {
+    const stOrd = {late:0, ok:1, done:2};
+    if (stOrd[a.st] !== stOrd[b.st]) return stOrd[a.st] - stOrd[b.st];
+    return (b.diff || 0) - (a.diff || 0);
+  });
+
+  return orders;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════════════
+function renderKPIs(orders) {
+  const total = orders.length;
+  const late = orders.filter(o => o.st === 'late').length;
+  const done = orders.filter(o => o.st === 'done').length;
+  const noGC = orders.filter(o => o.gcDate === '—' && o.st !== 'done').length;
+  const totalDay = orders.reduce((s, o) => s + (o.total || 0), 0);
+  const onTime = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  document.getElementById('kpiArea').innerHTML = `
+    <div class="kpi"><span class="kpi-tl tl-b"></span><div class="kpi-lbl">Đơn đang xử lý</div><div class="kpi-val">${total - done}</div><div class="kpi-sub">Tháng này</div></div>
+    <div class="kpi"><span class="kpi-tl tl-r"></span><div class="kpi-lbl">Trễ LXH</div><div class="kpi-val" style="color:var(--danger)">${late}</div><div class="kpi-sub dn">${total > 0 ? Math.round(late/total*100) : 0}% đơn đang xử lý</div></div>
+    <div class="kpi"><span class="kpi-tl tl-g"></span><div class="kpi-lbl">Hoàn thành</div><div class="kpi-val" style="color:var(--ok)">${done}</div><div class="kpi-sub up">${done} đơn đã giao</div></div>
+    <div class="kpi"><span class="kpi-tl tl-y"></span><div class="kpi-lbl">Chờ GC xác nhận</div><div class="kpi-val" style="color:var(--warn)">${noGC}</div><div class="kpi-sub wn">${noGC}/${total - done} đơn chưa có GC</div></div>
+    <div class="kpi"><span class="kpi-tl tl-b"></span><div class="kpi-lbl">Tổng dây đang XL</div><div class="kpi-val">${totalDay >= 1000 ? Math.round(totalDay/1000)+'k' : totalDay}</div><div class="kpi-sub">${total} đơn hàng</div></div>
+    <div class="kpi"><span class="kpi-tl ${onTime >= 80 ? 'tl-g' : 'tl-r'}"></span><div class="kpi-lbl">Tỉ lệ đúng hẹn</div><div class="kpi-val" style="color:var(--${onTime >= 80 ? 'ok' : 'danger'})">${onTime}%</div><div class="kpi-sub ${onTime >= 80 ? 'up' : 'dn'}">Target 80%${onTime < 80 ? ' — Cần xử lý gấp' : ''}</div></div>
+  `;
+}
+
+function renderMainTable(orders) {
+  const tbody = document.querySelector('#mainTbl tbody');
+  if (!orders.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--muted)">Không có dữ liệu</td></tr>';
+    return;
+  }
+
+  const buocNames = ['B1','B2','B3','B4','B5','B6','B7','B8'];
+
+  tbody.innerHTML = orders.map(o => {
+    const lxhColor = o.st === 'done' ? '' : (o.diff > 0 ? 'red' : o.diff > -5 ? 'orn' : '');
+    const diffTxt = o.st === 'done' ? '<span class="grn">Hoàn thành</span>' :
+      `<span class="${o.diff > 0 ? 'red' : 'grn'}">${fmtDiff(o.diff)}</span>`;
+
+    const pbColor = o.st === 'done' ? 'var(--ok)' : o.diff > 0 ? 'var(--warn)' : 'var(--accent)';
+    const progressBar = `<div class="pb"><div class="pbr"><div class="pbf" style="width:${o.pct}%;background:${pbColor}"></div></div><span style="font-size:10px;color:${pbColor};font-weight:700">${o.pct}%</span></div>`;
+
+    const buocTxt = o.st === 'done' ? '<span class="pill ps">Hoàn thành</span>' :
+      `<span class="pill pi">Bước ${o.currentBuoc} — ${STEP_NAMES[o.currentBuoc - 1].split('—')[0].trim()}</span>`;
+
+    const gcTxt = o.gcDate !== '—' ? `<span class="grn">${o.gcDate.substring(0,10)}</span>` :
+      '<span style="color:var(--muted)">Chưa đặt</span>';
+
+    const stPill = o.st === 'done' ? '<span class="pill ps">Đã hoàn thành</span>' :
+      o.diff > 0 ? `<span class="pill pd">Trễ ${o.diff} ngày</span>` :
+      o.diff > -5 ? '<span class="pill pw">Sắp đến hạn</span>' :
+      '<span class="pill pi">Đang xử lý</span>';
+
+    const cause = o.gcDate === '—' && o.st !== 'done' ?
+      '<span class="pill pw">Chưa đặt GC</span>' :
+      o.st === 'done' ? '<span class="pill ps">Đúng quy trình</span>' :
+      '<span class="pill pw">Đang xử lý</span>';
+
+    const khShort = o.kh.replace(/^K(\d+).*/, 'K$1').split('-')[0];
+
+    return `<tr class="clickable" data-st="${o.st}" onclick="openKH('${o.kh}')">
+      <td><strong>${o.id}</strong><br><span style="font-size:10px;color:var(--muted)">${o.name}</span></td>
+      <td>${o.kh}</td>
+      <td class="num">${(o.total||0).toLocaleString('vi-VN')}</td>
+      <td class="${lxhColor}">${o.lxh}</td>
+      <td>${diffTxt}</td>
+      <td>${progressBar}</td>
+      <td>${buocTxt}</td>
+      <td>${gcTxt}</td>
+      <td>${cause}</td>
+      <td>${stPill}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderHeatmap(orders) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const khMap = {};
+  orders.forEach(o => {
+    const kh = o.kh;
+    if (!khMap[kh]) khMap[kh] = { kh, orders: [], totalDay: 0 };
+    khMap[kh].orders.push(o);
+    khMap[kh].totalDay += o.total || 0;
+  });
+
+  const rows = Object.values(khMap).sort((a,b) => b.totalDay - a.totalDay);
+  const tbody = document.querySelector('#hmTable tbody');
+  tbody.innerHTML = rows.map(({ kh, orders: os, totalDay }) => {
+    const done = os.filter(o => o.st === 'done').length;
+    const late = os.filter(o => o.st === 'late').length;
+    const inProgress = os.filter(o => o.st !== 'done').length;
+    const rate = os.length > 0 ? Math.round(done / os.length * 100) : 0;
+    const nearest = os.filter(o => o.lxh !== '—')
+      .sort((a,b) => (a.diff||0) - (b.diff||0))[0];
+    const lxhTxt = nearest ? `<span style="color:${(nearest.diff||0)>0?'var(--danger)':'var(--warn)'}">
+      ${nearest.lxh}${(nearest.diff||0)>0?' ⚠':''}</span>` : '—';
+    const stPill = late > 0 ?
+      (done < os.length ? '<span class="pill pd">Trễ hẹn</span>' : '<span class="pill pw">Cần theo dõi</span>') :
+      '<span class="pill ps">Đúng tiến độ</span>';
+    const rateCls = rate >= 80 ? 'hm-ok' : rate >= 50 ? 'hm-wn' : 'hm-dn';
+
+    return `<tr>
+      <td class="rn">${kh}<small>${os[0]?.name || ''}</small></td>
+      <td><div class="hmc hm-tot">${os.length}</div></td>
+      <td><div class="hmc hm-tot">${totalDay.toLocaleString('vi-VN')}</div></td>
+      <td><div class="hmc ${done>0?'hm-ok':'hm-nd'}">${done}</div></td>
+      <td><div class="hmc ${inProgress>0?'hm-wn':'hm-nd'}">${inProgress}</div></td>
+      <td><div class="hmc ${late>0?'hm-dn':'hm-nd'}">${late}</div></td>
+      <td><div class="hmc ${rateCls}">${rate}%</div></td>
+      <td style="padding:8px 10px;font-size:11px">${lxhTxt}</td>
+      <td>${stPill}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCharts(orders) {
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Đếm đơn trễ theo bước
+  const treBuoc = [0,0,0,0,0,0,0,0];
+  const denHan7 = [0,0,0,0,0,0,0,0];
+  orders.forEach(o => {
+    if (o.st === 'done') return;
+    const b = o.currentBuoc - 1;
+    if (o.diff > 0) treBuoc[b]++;
+    if (o.diff !== null && o.diff >= -7 && o.diff <= 0) denHan7[b]++;
+  });
+
+  const stepLabels = ['Ban đầu','TH trả lời','XLĐH+GC','GC giao','Kho CB','HTĐG','TH lịch','Hoàn thành'];
+  const treColors = treBuoc.map(v => v === 0 ? '#E2E8F0' : v >= 3 ? '#B91C1C' : '#F59E0B');
+  const denHanColors = denHan7.map(v => v === 0 ? '#E2E8F0' : v >= 3 ? '#B91C1C' : '#F59E0B');
+
+  if (window._chartTreBC) window._chartTreBC.destroy();
+  if (window._chartDenHan) window._chartDenHan.destroy();
+
+  window._chartTreBC = new Chart(document.getElementById('cTreBC'), {
+    type:'bar', data:{ labels:stepLabels,
+      datasets:[{ label:'Đơn trễ', data:treBuoc, backgroundColor:treColors, borderRadius:4 }]
+    }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+      y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{stepSize:1},min:0},
+      x:{grid:{display:false},ticks:{font:{size:9},maxRotation:35,minRotation:35}}
+    }}
+  });
+
+  window._chartDenHan = new Chart(document.getElementById('cDenHan'), {
+    type:'bar', data:{ labels:stepLabels,
+      datasets:[{ label:'Đến hạn 7 ngày', data:denHan7, backgroundColor:denHanColors, borderRadius:4 }]
+    }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+      y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{stepSize:1},min:0},
+      x:{grid:{display:false},ticks:{font:{size:9},maxRotation:35,minRotation:35}}
+    }}
+  });
+
+  // Funnel theo bước
+  const funnelCnt = [0,0,0,0,0,0,0,0];
+  orders.forEach(o => {
+    o.stepStatus.forEach((s, i) => { if (s === 3) funnelCnt[i]++; });
+  });
+  const fColors = ['#1A3B2E','#2D6A4F','#2D9E6B','#4CAF7D','#F59E0B','#B45309','#B91C1C','#15803D'];
+  const fMax = Math.max(...funnelCnt, 1);
+  document.getElementById('funnelChart').innerHTML = funnelCnt.map((v, i) => {
+    const pct = Math.round(v / fMax * 100);
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <div style="font-size:9px;color:var(--muted);min-width:88px;text-align:right;white-space:nowrap">${i+1}. ${stepLabels[i]}</div>
+      <div style="flex:1;background:#E2E8F0;border-radius:3px;height:16px;overflow:hidden">
+        <div style="width:${Math.max(pct,8)}%;background:${fColors[i]};height:100%;border-radius:3px;display:flex;align-items:center;padding-left:5px">
+          <span style="font-size:9px;font-weight:700;color:#fff;white-space:nowrap">${v}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// PAGE 2 — Chi tiết theo khách hàng
+// ═══════════════════════════════════════════════════════════
+let _allOrders = [];
+
+function loadKH(kh) {
+  const khOrders = _allOrders.filter(o => o.kh === kh);
+  if (!khOrders.length) return;
+
+  document.getElementById('p2Title').textContent = `Chi tiết theo khách hàng — ${kh}`;
+  document.getElementById('ganttTitle').textContent = `Gantt tiến độ — bước QT2 × đơn hàng · ${kh}`;
+  document.getElementById('odTitle').textContent = `Chi tiết đơn hàng · ${kh}`;
+
+  // KPI
+  const done = khOrders.filter(o => o.st === 'done').length;
+  const late = khOrders.filter(o => o.st === 'late').length;
+  const totalDay = khOrders.reduce((s, o) => s + (o.total || 0), 0);
+  const nearest = khOrders.filter(o => o.lxh !== '—').sort((a,b) => (a.diff||0)-(b.diff||0))[0];
+  const lxhKPI = nearest ? `${nearest.lxh.substring(0,5)}${(nearest.diff||0)>0?' ⚠':' ✓'}` : '—';
+  const lxhSub = nearest ? ((nearest.diff||0)>0 ? `Đã trễ ~${nearest.diff} ngày` : 'Đúng hoặc sớm') : '—';
+
+  document.getElementById('khKPI').innerHTML = [
+    {l:'Tổng đơn hàng', v:khOrders.length, tl:'tl-b', sub:'Kỳ này'},
+    {l:'Tổng số dây', v:totalDay.toLocaleString('vi-VN'), tl:'tl-b', sub:'Sợi gia công'},
+    {l:'Đơn đã hoàn thành', v:done, tl:done>0?'tl-g':'tl-r', sub:done>0?`${done}/${khOrders.length} đơn`:'Chưa có'},
+    {l:'Đơn trễ hẹn', v:late, tl:late>0?'tl-r':'tl-g', sub:late>0?`${late} đơn cần xử lý`:'Không có'},
+    {l:'LXH gần nhất', v:lxhKPI, tl:nearest&&(nearest.diff||0)>0?'tl-r':'tl-g', sub:lxhSub},
+  ].map(k => `<div class="kpi"><span class="kpi-tl ${k.tl}"></span>
+    <div class="kpi-lbl">${k.l}</div>
+    <div class="kpi-val" style="${k.tl==='tl-r'?'color:var(--danger)':k.tl==='tl-g'?'color:var(--ok)':''}">${k.v}</div>
+    <div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  // Gantt
+  const stepShort = ['1.Ban đầu','2.TH trả lời','3.XLĐH+GC','4.GC giao','5.Kho CB','6.HTĐG','7.TH lịch','8.Hoàn thành'];
+  const scMap = {3:'gc-done',1:'gc-act',0:'gc-todo'};
+  const scTxt = {3:'✓',1:'▶',0:'·'};
+  let gh = `<thead><tr><th class="l" style="min-width:160px">Đơn hàng</th>`;
+  stepShort.forEach(s => gh += `<th>${s}</th>`);
+  gh += `<th>LXH</th><th>Trạng thái</th></tr></thead><tbody>`;
+  khOrders.forEach(o => {
+    const lxhColor = o.st==='done'?'color:var(--ok)':o.diff>0?'color:var(--danger);font-weight:700':'color:var(--warn)';
+    gh += `<tr><td class="on">${o.id}<small>${o.name}</small></td>`;
+    o.stepStatus.forEach(s => {
+      gh += `<td><div class="gc ${scMap[s]||'gc-todo'}">${scTxt[s]||'·'}</div></td>`;
+    });
+    gh += `<td style="padding:7px 10px;font-size:11px;${lxhColor}">${o.lxh}</td>`;
+    const stP = o.st==='done'?'ps':o.st==='late'?'pd':'pw';
+    const stT = o.st==='done'?'Hoàn thành':o.st==='late'?'Trễ hẹn':'Đang chạy';
+    gh += `<td style="padding:7px 10px"><span class="pill ${stP}">${stT}</span></td></tr>`;
+  });
+  gh += '</tbody>';
+  document.getElementById('ganttKH').innerHTML = gh;
+
+  // Order filter dropdown
+  const sel = document.getElementById('orderFilter');
+  sel.innerHTML = khOrders.map(o => `<option value="${o.id}">${o.id} — ${o.name}</option>`).join('');
+  if (khOrders.length) loadOrderDetail(khOrders[0].id);
+}
+
+function loadOrderDetail(orderId) {
+  const o = _allOrders.find(x => x.id === orderId);
+  if (!o) return;
+
+  // Thông tin sản lượng
+  const sanluong = [
+    {l:'Tổng dây', v:(o.total||0).toLocaleString('vi-VN')},
+    {l:'Loại sợi', v:o.details.length ? [...new Set(o.details.map(d=>d['name_of_product']||'').filter(Boolean))].slice(0,2).join(', ') : '—'},
+    {l:'GC', v:o.gcDate!=='—'?o.gcDate.substring(0,10):'Chưa đặt'},
+    {l:'LXH', v:o.lxh, red:o.diff>0},
+    {l:'Ngày tạo', v:o.created},
+    {l:'Trạng thái', v:o.st==='done'?'Hoàn thành ✓':`Trễ ~${o.diff||0} ngày`, red:o.diff>0, ok:o.st==='done'},
+  ];
+  document.getElementById('odSanLuong').innerHTML = sanluong.map(s => `
+    <div style="padding:10px 14px;border-right:1px solid var(--border)">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px">${s.l}</div>
+      <div style="font-size:12px;font-weight:600;${s.red?'color:var(--danger)':s.ok?'color:var(--ok)':''}">${s.v}</div>
+    </div>`).join('');
+
+  // Bảng bước
+  const svcDates = [null, null, null,
+    o.gcDate, o.khoDate, o.htdgDate, o.htDate, o.htDate];
+  const stIcon = {
+    done:'<div style="width:22px;height:22px;border-radius:50%;background:var(--ok);display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700">✓</div>',
+    active:'<div style="width:22px;height:22px;border-radius:50%;background:var(--warn);display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700">▶</div>',
+    todo:'<div style="width:22px;height:22px;border-radius:50%;background:#E2E8F0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted2);font-weight:700">○</div>',
+  };
+  const stPill = {
+    done:'<span class="pill ps">Hoàn thành</span>',
+    active:'<span class="pill pw">Đang xử lý</span>',
+    todo:'<span class="pill pn">Chưa bắt đầu</span>',
+  };
+  document.getElementById('odStepBody').innerHTML = o.stepStatus.map((s, i) => {
+    const state = s===3?'done':s===1?'active':'todo';
+    const date = svcDates[i];
+    const dateTxt = date && date !== '—' ? date.substring(0,10) : '—';
+    return `<tr>
+      <td style="padding:9px 10px;border-bottom:1px solid rgba(0,0,0,0.04);text-align:center">${stIcon[state]}</td>
+      <td style="padding:9px 10px;border-bottom:1px solid rgba(0,0,0,0.04);font-weight:${state==='todo'?'400':'500'};color:${state==='todo'?'var(--muted)':'var(--text)'}">${i+1}. ${STEP_NAMES[i]}</td>
+      <td style="padding:9px 10px;border-bottom:1px solid rgba(0,0,0,0.04);font-size:11px;font-family:monospace">${state!=='todo'?o.created:'—'}</td>
+      <td style="padding:9px 10px;border-bottom:1px solid rgba(0,0,0,0.04);font-size:11px;font-family:monospace">${dateTxt}</td>
+      <td style="padding:9px 10px;border-bottom:1px solid rgba(0,0,0,0.04);font-size:11px;color:var(--muted)">${STEP_OWNERS[i]}</td>
+      <td style="padding:9px 10px;border-bottom:1px solid rgba(0,0,0,0.04)">${stPill[state]}</td>
+      <td style="padding:9px 10px;border-bottom:1px solid rgba(0,0,0,0.04);font-size:10px;color:var(--muted)">—</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOADING STATE
+// ═══════════════════════════════════════════════════════════
+function showLoading(msg) {
+  document.getElementById('loadOverlay').style.display = 'flex';
+  document.getElementById('loadMsg').textContent = msg;
+}
+function hideLoading() {
+  document.getElementById('loadOverlay').style.display = 'none';
+}
+function showError(msg) {
+  hideLoading();
+  document.getElementById('loadOverlay').style.display = 'flex';
+  document.getElementById('loadOverlay').style.background = 'rgba(185,28,28,0.08)';
+  document.getElementById('loadMsg').textContent = '⚠ ' + msg;
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAIN — load tất cả dữ liệu
+// ═══════════════════════════════════════════════════════════
+async function loadAllData() {
+  showLoading('Đang tải dữ liệu từ Google Sheet...');
+  try {
+    const [file1Rows, file2Rows] = await Promise.all([
+      fetchCSV(SHEETS.file1),
+      fetchCSV(SHEETS.file2),
+    ]);
+
+    showLoading('Đang xử lý dữ liệu...');
+    const ticketMap = buildTicketMap(file1Rows);
+    const orders = buildOrders(ticketMap, file2Rows);
+    _allOrders = orders;
+
+    // Cập nhật topbar timestamp
+    document.getElementById('lastUpdate').textContent =
+      'Cập nhật: ' + new Date().toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    // Render tất cả
+    renderKPIs(orders);
+    renderMainTable(orders);
+    renderHeatmap(orders);
+    renderCharts(orders);
+
+    // Populate KH dropdown từ data thực tế
+    const khList = [...new Set(orders.map(o => o.kh))].sort();
+    const sel = document.getElementById('khSelect');
+    sel.innerHTML = khList.map(kh => `<option value="${kh}">${kh}</option>`).join('');
+
+    // Load KH đầu tiên
+    if (khList.length) loadKH(khList[0]);
+
+    hideLoading();
+
+    // Charts tĩnh (trend + nguyên nhân — vẫn manual vì cần dữ liệu lịch sử)
+    initStaticCharts();
+
+  } catch (err) {
+    console.error(err);
+    showError('Không thể tải dữ liệu. Kiểm tra Sheet đã publish chưa? (' + err.message + ')');
+  }
+}
+
+function initStaticCharts() {
+  Chart.defaults.font.family = "'Segoe UI',system-ui,sans-serif";
+  Chart.defaults.font.size = 10;
+  Chart.defaults.color = '#637A6E';
+
+  if (window._cTrend) window._cTrend.destroy();
+  window._cTrend = new Chart(document.getElementById('cTrend'),{type:'bar',data:{
+    labels:['T1','T2','T3','T4','T5','T6','T7'],
+    datasets:[
+      {label:'Thực tế',data:[4,6,8,12,9,2,null],backgroundColor:'#2D9E6B',borderRadius:3},
+      {label:'Kế hoạch',data:[6,6,8,10,10,8,10],backgroundColor:'#E2E8F0',borderRadius:3},
+      {label:'Dự báo T7',data:[null,null,null,null,null,null,8],backgroundColor:'rgba(45,158,107,0.3)',borderRadius:3,borderWidth:2,borderColor:'#2D9E6B'},
+      {label:'Lũy kế',data:[4,10,18,30,39,41,null],type:'line',yAxisID:'y1',borderColor:'#1A3B2E',pointRadius:3,tension:.3,fill:false,borderWidth:1.5},
+      {label:'Lũy kế KH',data:[6,12,20,30,40,48,58],type:'line',yAxisID:'y1',borderColor:'#94A3B8',borderDash:[4,4],pointRadius:0,fill:false,borderWidth:1.5}
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+    y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{stepSize:4},max:14},
+    y1:{position:'right',grid:{display:false},ticks:{stepSize:10}}
+  }}});
+
+  if (window._cDayThang) window._cDayThang.destroy();
+  window._cDayThang = new Chart(document.getElementById('cDayThang'),{type:'bar',data:{
+    labels:['T1','T2','T3','T4','T5','T6','T7'],
+    datasets:[
+      {label:'Thực tế (k dây)',data:[180,210,245,320,275,245,null],backgroundColor:'#1A3B2E',borderRadius:3},
+      {label:'Kế hoạch',data:[200,200,250,300,280,260,280],backgroundColor:'#E2E8F0',borderRadius:3}
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+    y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>v+'k'}},
+    x:{grid:{display:false}}
+  }}});
+
+  if (window._cCause) window._cCause.destroy();
+  window._cCause = new Chart(document.getElementById('cCause'),{type:'bar',data:{
+    labels:['GC chậm giao','GC thiếu hàng','XLĐH nội bộ','Kho chậm','Khách dời'],
+    datasets:[{label:'Số đơn',data:[3,1,1,1,2],
+      backgroundColor:['#B91C1C','#EF4444','#B45309','#F59E0B','#1D4ED8'],
+      borderRadius:4,borderSkipped:false}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+    y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{stepSize:1},max:4},
+    x:{grid:{display:false},ticks:{font:{size:9},maxRotation:30,minRotation:30}}
+  }}});
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAV + FILTER (giữ nguyên)
+// ═══════════════════════════════════════════════════════════
+function go(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+function filterSt(st,btn){
+  document.querySelectorAll('#mainTbl tbody tr').forEach(r=>{
+    r.style.display=(st==='all'||r.dataset.st===st)?'':'none';
+  });
+}
+function openKH(kh){
+  const sel = document.getElementById('khSelect');
+  if (sel) sel.value = kh;
+  loadKH(kh);
+  go('p2',document.getElementById('n2'));
+}
+
+// Khởi động
+loadAllData();
+</script>
+</body>
+</html>
