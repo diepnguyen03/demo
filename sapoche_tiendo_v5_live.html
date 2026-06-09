@@ -380,17 +380,45 @@ const STEP_OWNERS = ['XLĐH','TH','XLĐH','Kho','Kho + Sàn','HTĐG','HTĐG','XL
 // ═══════════════════════════════════════════════════════════
 // FETCH CSV từ Google Sheet (published)
 // ═══════════════════════════════════════════════════════════
-function csvUrl(sheetId, sheetName = '') {
-  const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
-  return sheetName ? `${base}&sheet=${encodeURIComponent(sheetName)}` : base;
-}
-
+// Dùng gviz/tq với callback để tránh CORS (Google hỗ trợ JSONP-style)
 async function fetchCSV(sheetId, sheetName = '') {
-  const url = csvUrl(sheetId, sheetName);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Fetch failed: ${url}`);
-  const text = await res.text();
-  return parseCSV(text);
+  return new Promise((resolve, reject) => {
+    const cbName = '_gviz_' + Math.random().toString(36).slice(2);
+    const params = new URLSearchParams({ tqx: `out:json;responseHandler:${cbName}` });
+    if (sheetName) params.set('sheet', sheetName);
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?${params}`;
+
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('Timeout — kiểm tra Sheet đã publish to web chưa?'));
+    }, 15000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = function(data) {
+      cleanup();
+      try {
+        const cols = data.table.cols.map(c => c.label || c.id);
+        const rows = (data.table.rows || []).map(r => {
+          const obj = {};
+          (r.c || []).forEach((cell, i) => {
+            obj[cols[i]] = cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v) : '') : '';
+          });
+          return obj;
+        }).filter(r => Object.values(r).some(v => v));
+        resolve(rows);
+      } catch(e) { reject(e); }
+    };
+
+    script.onerror = () => { cleanup(); reject(new Error('Failed to fetch — kiểm tra Sheet đã publish chưa?')); };
+    script.src = url;
+    document.head.appendChild(script);
+  });
 }
 
 function parseCSV(text) {
