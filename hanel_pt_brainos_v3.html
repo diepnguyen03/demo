@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sơ đồ Giải pháp AI BrainOS — Hanel PT</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#f4f5f9;font-family:'Be Vietnam Pro',sans-serif;color:#111;min-height:100vh}
+.page{padding:24px 32px 36px;max-width:1480px;margin:0 auto}
+h1{font-size:22px;font-weight:800;text-align:center;letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px}
+.card{background:#fff;border:1px solid #dce0ee;border-radius:12px;overflow:hidden}
+
+/* HEADER */
+.hrow{display:grid;grid-template-columns:170px 1fr 210px 1fr;border-bottom:2px solid #e4e8f4}
+.hcell{padding:9px 12px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#222;display:flex;align-items:center;justify-content:center;gap:6px;border-right:1px solid #e4e8f4}
+.hcell:last-child{border-right:none}
+.hn{color:#fff;font-size:8px;padding:2px 7px;border-radius:10px;letter-spacing:.06em;font-weight:700;flex-shrink:0}
+
+/* MAIN GRID */
+.mgrid{display:grid;grid-template-columns:170px 1fr 210px 1fr;align-items:start;position:relative}
+.mcell{padding:14px 12px;border-right:1px solid #e4e8f4;position:relative}
+.mcell:last-child{border-right:none}
+
+/* SVG overlay */
+#overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:visible}
+
+/* ZONE */
+.zone{border:1.5px dashed;border-radius:10px;padding:12px 10px}
+
+/* BOX */
+.bx{border:1.5px solid #f5a623;border-radius:8px;padding:8px 11px;background:#fff9f0;cursor:pointer;transition:all .14s;text-align:center;display:block;width:100%}
+.bx:hover{background:#fff0d0;transform:translateY(-1px);box-shadow:0 2px 8px rgba(245,166,35,.2)}
+.bx.active{border-color:#e8440a!important;background:#fff0d0!important;box-shadow:0 0 0 3px rgba(232,68,10,.12)!important}
+.bx.bl{border-color:#3d6ef5;background:#f0f4ff}.bx.bl:hover{background:#e8edff}
+.bx.gr{border-color:#2dc98a;background:#f0faf5}.bx.gr:hover{background:#e2f7ef}
+.bx.pu{border-color:#7c5cfc;background:#f8f5ff}.bx.pu:hover{background:#f0eaff}
+.bx.rd{border-color:#e84545;background:#fff5f5}.bx.rd:hover{background:#ffe8e8}
+.bn{font-size:11px;font-weight:600;color:#111;line-height:1.3}
+.bt{font-size:9.5px;font-weight:600;margin-top:2px}
+.bx.bl .bt{color:#3d6ef5}.bx.gr .bt{color:#1a9e6c}.bx.pu .bt{color:#5830d8}.bx.rd .bt{color:#c01010}
+.bx:not(.bl):not(.gr):not(.pu):not(.rd) .bt{color:#e8440a}
+.bs{font-size:9px;color:#999;margin-top:2px;line-height:1.3}
+
+/* SOURCE ROWS */
+.prow{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.prow:last-of-type{margin-bottom:0}
+.pico{font-size:19px;color:#555;flex-shrink:0}
+.parr{flex:1;height:1px;background:#ccc;position:relative}
+.parr::after{content:'▶';position:absolute;right:-5px;top:-6px;font-size:8px;color:#bbb}
+.sbox{border:1.5px solid #f5a623;border-radius:7px;padding:5px 8px;background:#fff9f0;font-size:10px;font-weight:600;cursor:pointer;transition:all .12s;text-align:center;flex-shrink:0;min-width:88px}
+.sbox:hover{background:#fff0d0;transform:translateY(-1px)}
+.sbox.active{border-color:#e8440a;background:#fff0d0;box-shadow:0 0 0 3px rgba(232,68,10,.12)}
+.stch{font-size:8.5px;font-weight:500;margin-top:1px;color:#e8440a}
+.blbl{font-size:9px;color:#bbb;text-align:center;margin-top:7px;font-style:italic}
+
+/* ETL label */
+.etl-lbl{font-size:9px;color:#e8440a;font-weight:700;text-align:center}
+
+/* animated dots */
+.vc{display:flex;flex-direction:column;align-items:center}
+.vl{width:2px;background:#ddd;position:relative}
+.vl .pk{position:absolute;left:-3px;width:6px;height:6px;border-radius:50%;animation:pkV var(--d,2s) linear infinite;animation-delay:var(--dl,0s)}
+@keyframes pkV{0%{top:-3px;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:calc(100% - 3px);opacity:0}}
+.vt{font-size:10px;color:#bbb;text-align:center;line-height:1}
+.harr{display:flex;align-items:center;gap:0}
+.hl{height:2px;background:#ddd;flex:1;position:relative;min-width:12px}
+.hl .pk{position:absolute;top:-3px;width:6px;height:6px;border-radius:50%;animation:pkH var(--d,2s) linear infinite;animation-delay:var(--dl,0s)}
+@keyframes pkH{0%{left:-3px;opacity:0}12%{opacity:1}88%{opacity:1}100%{left:calc(100% - 3px);opacity:0}}
+.hat{font-size:9px;color:#bbb;flex-shrink:0}
+
+/* COL3 */
+.c3wrap{display:flex;flex-direction:column;gap:10px}
+.c3row{display:flex;align-items:center;gap:6px}
+
+/* COL4 UC groups */
+.uc-group{border:1px solid #e4e8f4;border-radius:8px;overflow:hidden;margin-bottom:4px}
+.uc-head{padding:5px 9px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #e4e8f4}
+.uc-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:6px}
+.uc-item{border:1px solid;border-radius:5px;padding:4px 7px;cursor:pointer;transition:all .12s}
+.uc-item:hover{transform:translateY(-1px)}
+.uc-item.active{box-shadow:0 0 0 2px}
+.uc-id{font-size:8px;font-weight:700;letter-spacing:.06em}
+.uc-name{font-size:10px;font-weight:600;color:#111;line-height:1.25;margin-top:1px}
+.g2 .uc-head{background:#fffbe8;color:#a06000}.g2 .uc-item{border-color:#f5c060;background:#fffef5}.g2 .uc-id{color:#a06000}
+.g2 .uc-item:hover{background:#fff8e0}.g2 .uc-item.active{box-shadow:0 0 0 2px #f5a623;background:#fff3cc}
+.g3 .uc-head{background:#e8f4ff;color:#1040a0}.g3 .uc-item{border-color:#90b8f0;background:#f5f9ff}.g3 .uc-id{color:#1040a0}
+.g3 .uc-item:hover{background:#e8f0ff}.g3 .uc-item.active{box-shadow:0 0 0 2px #3d6ef5;background:#dce8ff}
+.g4 .uc-head{background:#eef5e8;color:#1a6020}.g4 .uc-item{border-color:#80c880;background:#f5fbf0}.g4 .uc-id{color:#1a6020}
+.g4 .uc-item:hover{background:#e8f7e0}.g4 .uc-item.active{box-shadow:0 0 0 2px #2dc98a;background:#d8f2e8}
+.g5 .uc-head{background:#f0ecff;color:#4020a0}.g5 .uc-item{border-color:#b090f0;background:#f8f5ff}.g5 .uc-id{color:#4020a0}
+.g5 .uc-item:hover{background:#eee8ff}.g5 .uc-item.active{box-shadow:0 0 0 2px #7c5cfc;background:#e4dcff}
+.uc-adv{grid-column:1/-1}
+
+/* LEGEND */
+.legend{padding:8px 20px;background:#fafbfe;border-top:1px solid #eef0f8;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:#555}
+
+/* DRAWER */
+.drawer{display:none;border-top:2px solid #f5a623;padding:16px 20px;background:#fffcf7;animation:su .16s ease}
+@keyframes su{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.dhead{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.dbadge{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:3px;background:#fff3dc;color:#c06000;border:1px solid #f5c060;flex-shrink:0;margin-top:2px}
+.dname{font-size:16px;font-weight:700;color:#111;line-height:1.2}
+.dtech{font-size:11px;color:#888;margin-top:2px}
+.dclose{margin-left:auto;width:24px;height:24px;border-radius:50%;border:1px solid #ddd;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:#aaa;flex-shrink:0}
+.dclose:hover{background:#fee;color:#c00}
+.dbody{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.dlbl{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#ccc;margin-bottom:6px}
+.drow{display:flex;gap:5px;padding:3px 0;border-bottom:1px solid #f5f0e8}
+.drow:last-child{border-bottom:none}
+.ddot{width:4px;height:4px;border-radius:50%;background:#f5a623;flex-shrink:0;margin-top:4px}
+.dtext{font-size:11px;color:#555;line-height:1.5}
+
+/* TABS */
+.tabnav{display:flex;gap:4px;padding:10px 20px 0;background:#f4f5f9;border-bottom:2px solid #e4e8f4}
+.tabnav a{font-size:11px;font-weight:600;padding:7px 14px;border-radius:6px 6px 0 0;color:#888;background:#eef0f8;border:1px solid #e4e8f4;border-bottom:none;cursor:pointer;transition:all .12s;text-decoration:none;display:block}
+.tabnav a.on{background:#fff;color:#2060c0;border-color:#e4e8f4;border-bottom:2px solid #fff;margin-bottom:-2px}
+.tabpage{display:none}.tabpage.on{display:block}
+
+/* DETAIL PAGES */
+.dp-page{padding:24px 32px 40px;max-width:1440px;margin:0 auto}
+.dp-section{margin-bottom:28px}
+.dp-sec-title{font-size:15px;font-weight:700;color:#222;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #e4e8f4;display:flex;align-items:center;gap:8px}
+.dp-sec-title .hn2{color:#fff;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700}
+.dp-card{border:1px solid #e4e8f4;border-radius:10px;padding:14px 16px;background:#fff}
+.dp-card-title{font-size:13px;font-weight:600;color:#111;margin-bottom:4px}
+.dp-card-sub{font-size:11px;color:#3d6ef5;font-weight:500;margin-bottom:8px}
+.dp-card-body{font-size:11px;color:#666;line-height:1.55}
+.dp-card-body li{margin-left:14px;margin-bottom:3px}
+.dp-card-code{background:#f0f4ff;border-radius:6px;padding:8px 10px;font-size:10px;color:#3d6ef5;margin-top:8px;line-height:1.7;font-family:monospace}
+.dp-card-foot{background:#e8f5e8;border-radius:6px;padding:6px 10px;font-size:10px;color:#1a6020;margin-top:8px}
+.uc-table{width:100%;border-collapse:collapse;font-size:12px}
+.uc-table th{background:#f4f5f9;padding:7px 12px;text-align:left;font-weight:600;color:#555;border-bottom:2px solid #e4e8f4}
+.uc-table td{padding:7px 12px;border-bottom:1px solid #f0f0f4;color:#333;vertical-align:top}
+.uc-table tr:hover td{background:#fafbff}
+.uc-badge2{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;color:#fff}
+</style>
+</head>
+<body>
+<div class="page">
+<h1>Sơ đồ Giải pháp AI BrainOS — Hanel PT</h1>
+
+<div class="tabnav">
+  <a class="on" onclick="switchTab('overview',this)">Tổng quan</a>
+  <a onclick="switchTab('storage',this)">Lưu trữ (Lake → DWH → Mart)</a>
+  <a onclick="switchTab('ai',this)">Kết nối Claude — 33 use-cases</a>
+</div>
+
+<!-- ═══════════════════ TAB: TỔNG QUAN ═══════════════════ -->
+<div class="tabpage on" id="tab-overview">
+<div class="card" id="card">
+
+<div class="hrow">
+  <div class="hcell"><span class="hn" style="background:#c07010">1</span>SỐ HÓA</div>
+  <div class="hcell"><span class="hn" style="background:#2060c0">2</span>LƯU TRỮ</div>
+  <div class="hcell"><span class="hn" style="background:#5830d8">3</span>PHÂN PHỐI</div>
+  <div class="hcell"><span class="hn" style="background:#1a6a3a">4</span>SỬ DỤNG AI</div>
+</div>
+
+<div class="mgrid" id="mgrid">
+<svg id="overlay"><defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker></defs></svg>
+
+<!-- ═══ COL 1: SỐ HÓA ═══ -->
+<div class="mcell">
+<div class="zone" style="border-color:#f5c060;background:#fffdf4">
+  <div class="prow">
+    <span class="pico">👤</span>
+    <div class="parr"></div>
+    <div class="sbox" id="s-bravo" onclick="pick('bravo')">Bravo ERP<div class="stch">API · batch/RT</div></div>
+  </div>
+  <div class="prow">
+    <span class="pico">👤</span>
+    <div class="parr"></div>
+    <div class="sbox" id="s-files" onclick="pick('files')">File ngoài<div class="stch">Excel/Word/PDF</div></div>
+  </div>
+  <div class="prow">
+    <span class="pico">👤</span>
+    <div class="parr"></div>
+    <div class="sbox" id="s-crm" onclick="pick('crm')">CRM & Thoại<div class="stch">BASE · Omicall</div></div>
+  </div>
+  <div class="prow" style="margin-bottom:0">
+    <span class="pico">🏭</span>
+    <div class="parr"></div>
+    <div class="sbox" id="s-iot" onclick="pick('iot')">Máy / IoT<div class="stch">MQTT · OPC-UA</div></div>
+  </div>
+  <div class="blbl">batch / realtime</div>
+</div>
+</div>
+
+<!-- ═══ COL 2: LƯU TRỮ ═══ -->
+<div class="mcell" style="padding:0">
+
+  <div style="padding:12px 12px 10px;border-bottom:2px dashed #c8d8f0;background:#f4f8ff">
+    <div style="font-size:8px;font-weight:700;color:#2060c0;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px">
+      <span style="background:#2060c0;color:#fff;font-size:7px;padding:1px 6px;border-radius:8px">2</span>LƯU TRỮ
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px">
+        <div style="font-size:9px;color:#3d6ef5;font-weight:600;white-space:nowrap">Data pipeline</div>
+        <div style="font-size:8px;color:#aaa;white-space:nowrap">n8n / Airbyte</div>
+      </div>
+      <div style="flex-shrink:0">
+        <div style="font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#3d6ef5;text-align:center;margin-bottom:3px">Google BigQuery</div>
+        <div class="bx bl" id="b-lake" onclick="pick('lake')" style="width:100px">
+          <div class="bn">Data Lake</div>
+          <div class="bs">Raw · immutable</div>
+        </div>
+      </div>
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:16px">
+        <div class="etl-lbl">ETL</div>
+        <div class="harr" style="width:26px"><div class="hl" style="background:#f5c090"><div class="pk" style="background:#e8440a;--d:1.4s"></div></div><div class="hat" style="color:#e8440a">▶</div></div>
+      </div>
+      <div style="flex-shrink:0">
+        <div style="height:18px"></div>
+        <div class="bx bl" id="b-dwh" onclick="pick('dwh')" style="width:116px">
+          <div class="bn">Data Warehouse</div>
+          <div class="bs">SQL · chuẩn hóa</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GIÁM SÁT -->
+  <div style="padding:12px 12px 14px;background:#fffaf4;margin-top:4px">
+    <div style="font-size:8px;font-weight:700;color:#c07010;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:5px">
+      <span style="background:#c07010;color:#fff;font-size:7px;padding:1px 6px;border-radius:8px">5</span>GIÁM SÁT HỆ THỐNG
+    </div>
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+        <div class="vc"><div class="vl" style="height:10px"><div class="pk" style="background:#3d6ef5;--d:2s"></div></div><div class="vt">▼</div></div>
+        <div class="bx" id="b-mon" onclick="pick('mon')" style="width:148px">
+          <div class="bn">Monitoring</div>
+          <div class="bt">Google Cloud Monitoring</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:4px;width:148px">
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1">
+            <div class="vc"><div class="vl" style="height:8px"><div class="pk" style="background:#f5a623;--d:1.9s;--dl:.2s"></div></div><div class="vt">▼</div></div>
+            <div class="bx" id="b-gmail" onclick="pick('gmail')" style="width:100%">
+              <div class="bn" style="font-size:10px">Mail alerting</div>
+              <div class="bt">Gmail / Email</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1">
+            <div class="vc"><div class="vl" style="height:8px"><div class="pk" style="background:#f5a623;--d:2s;--dl:.4s"></div></div><div class="vt">▼</div></div>
+            <div class="bx" id="b-basemsg" onclick="pick('basemsg')" style="width:100%">
+              <div class="bn" style="font-size:10px">Base Message</div>
+              <div class="bt">Base webhook</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+        <div class="vc"><div class="vl" style="height:10px"><div class="pk" style="background:#3d6ef5;--d:1.8s;--dl:.3s"></div></div><div class="vt" style="color:#3d6ef5">▼</div></div>
+        <div class="bx" id="b-backlog" onclick="pick('backlog')" style="width:144px">
+          <div class="bn">Backlog storage</div>
+          <div class="bt">PostgreSQL</div>
+          <div class="bs">DLQ · retry</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ COL 3: PHÂN PHỐI ═══ -->
+<div class="mcell">
+<div class="zone" style="border-color:#b090f0;background:#faf7ff">
+  <div style="font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7c5cfc;text-align:center;margin-bottom:10px">Data Marts — Google BigQuery</div>
+  <div class="c3wrap">
+    <div class="c3row"><div class="bx pu" id="b-mfin" onclick="pick('mfin')" style="flex:1"><div class="bn">Finance Mart</div><div class="bt">Google BigQuery</div><div class="bs">Kế toán · Công nợ · Giá thành</div></div></div>
+    <div class="c3row"><div class="bx pu" id="b-mrev" onclick="pick('mrev')" style="flex:1"><div class="bn">Revenue Mart</div><div class="bt">Google BigQuery</div><div class="bs">Bán hàng · CRM · Forecast</div></div></div>
+    <div class="c3row"><div class="bx pu" id="b-mpro" onclick="pick('mpro')" style="flex:1"><div class="bn">Procurement Mart</div><div class="bt">Google BigQuery</div><div class="bs">Mua hàng · NCC · Giá</div></div></div>
+    <div class="c3row"><div class="bx pu" id="b-minv" onclick="pick('minv')" style="flex:1"><div class="bn">Inventory Mart</div><div class="bt">Google BigQuery</div><div class="bs">Tồn kho · Lô · MSL</div></div></div>
+    <div class="c3row"><div class="bx pu" id="b-mpln" onclick="pick('mpln')" style="flex:1"><div class="bn">Planning Mart</div><div class="bt">Google BigQuery</div><div class="bs">WO · MPS/MRP · Năng lực</div></div></div>
+    <div class="c3row"><div class="bx pu" id="b-mprd" onclick="pick('mprd')" style="flex:1"><div class="bn">Production Mart</div><div class="bt">Google BigQuery</div><div class="bs">Sản lượng · OEE · IoT</div></div></div>
+    <div class="c3row"><div class="bx pu" id="b-mqua" onclick="pick('mqua')" style="flex:1"><div class="bn">Quality Mart</div><div class="bt">Google BigQuery</div><div class="bs">IQC/IPQC/OQC · 8D/CAR</div></div></div>
+    <div class="c3row"><div class="bx pu" id="b-meng" onclick="pick('meng')" style="flex:1"><div class="bn">Engineering Mart</div><div class="bt">Google BigQuery</div><div class="bs">BOM · ECO/ECN · SOP/WI</div></div></div>
+    <div class="c3row"><div class="bx pu" id="b-mmnt" onclick="pick('mmnt')" style="flex:1"><div class="bn">Maintenance Mart</div><div class="bt">Google BigQuery</div><div class="bs">Bảo trì · MTBF · Phụ tùng</div></div></div>
+    <div class="c3row"><div class="bx pu" id="b-mhr" onclick="pick('mhr')" style="flex:1"><div class="bn">HR Mart</div><div class="bt">Google BigQuery</div><div class="bs">Nhân sự · Lương · Skill</div></div></div>
+    <div class="c3row"><div class="bx pu" id="b-mrag" onclick="pick('mrag')" style="flex:1"><div class="bn">Knowledge Index (RAG)</div><div class="bt">Vector DB · Embeddings</div><div class="bs">SOP · IPC/ISO · 8D</div></div></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ COL 4: SỬ DỤNG AI ═══ -->
+<div class="mcell">
+<div class="zone" style="border-color:#80c880;background:#f4fbf7">
+<div style="display:flex;flex-direction:column;gap:4px">
+
+  <div class="uc-group g2">
+    <div class="uc-head">AI báo cáo hàng ngày</div>
+    <div class="uc-grid">
+      <div class="uc-item" id="u-LD01" onclick="pick('LD01')"><div class="uc-id">UC-LD01</div><div class="uc-name">Cảnh báo rủi ro sáng</div></div>
+      <div class="uc-item" id="u-BH02" onclick="pick('BH02')"><div class="uc-id">UC-BH02</div><div class="uc-name">Cảnh báo PO bất thường</div></div>
+      <div class="uc-item" id="u-SX02" onclick="pick('SX02')"><div class="uc-id">UC-SX02</div><div class="uc-name">Chẩn đoán dừng chuyền</div></div>
+      <div class="uc-item" id="u-CL02" onclick="pick('CL02')"><div class="uc-id">UC-CL02</div><div class="uc-name">Phát hiện xu hướng lỗi</div></div>
+      <div class="uc-item" id="u-KO01" onclick="pick('KO01')"><div class="uc-id">UC-KO01</div><div class="uc-name">Cảnh báo MSL & stock</div></div>
+      <div class="uc-item" id="u-KTE01" onclick="pick('KTE01')"><div class="uc-id">UC-KT_E01</div><div class="uc-name">Tra cứu SOP/WI (RAG)</div></div>
+    </div>
+  </div>
+
+  <div class="uc-group g3">
+    <div class="uc-head">AI báo cáo hàng tuần</div>
+    <div class="uc-grid">
+      <div class="uc-item" id="u-LD03" onclick="pick('LD03')"><div class="uc-id">UC-LD03</div><div class="uc-name">Báo cáo 4M tuần</div></div>
+      <div class="uc-item" id="u-LD04" onclick="pick('LD04')"><div class="uc-id">UC-LD04</div><div class="uc-name">Cảnh báo rủi ro DN</div></div>
+      <div class="uc-item" id="u-KH03" onclick="pick('KH03')"><div class="uc-id">UC-KH03</div><div class="uc-name">Cân đối năng lực</div></div>
+      <div class="uc-item" id="u-KH04" onclick="pick('KH04')"><div class="uc-id">UC-KH04</div><div class="uc-name">Mô phỏng what-if</div></div>
+      <div class="uc-item" id="u-KH02" onclick="pick('KH02')"><div class="uc-id">UC-KH02</div><div class="uc-name">Cảnh báo WO trễ</div></div>
+      <div class="uc-item" id="u-BH05" onclick="pick('BH05')"><div class="uc-id">UC-BH05</div><div class="uc-name">Insight khách hàng</div></div>
+      <div class="uc-item" id="u-CL03" onclick="pick('CL03')"><div class="uc-id">UC-CL03</div><div class="uc-name">Tổng hợp 8D/CAR/NCR</div></div>
+      <div class="uc-item" id="u-MH03" onclick="pick('MH03')"><div class="uc-id">UC-MH03</div><div class="uc-name">Dự báo thiếu vật tư</div></div>
+      <div class="uc-item" id="u-MH04" onclick="pick('MH04')"><div class="uc-id">UC-MH04</div><div class="uc-name">Single-source risk</div></div>
+      <div class="uc-item" id="u-BT02" onclick="pick('BT02')"><div class="uc-id">UC-BT02</div><div class="uc-name">Dự báo hỏng thiết bị</div></div>
+      <div class="uc-item" id="u-NS02" onclick="pick('NS02')"><div class="uc-id">UC-NS02</div><div class="uc-name">Dự báo nghỉ việc</div></div>
+      <div class="uc-item" id="u-NS04" onclick="pick('NS04')"><div class="uc-id">UC-NS04</div><div class="uc-name">Skill matrix & đào tạo</div></div>
+      <div class="uc-item" id="u-KT03" onclick="pick('KT03')"><div class="uc-id">UC-KT03</div><div class="uc-name">Dự báo dòng tiền</div></div>
+      <div class="uc-item" id="u-KO04" onclick="pick('KO04')"><div class="uc-id">UC-KO04</div><div class="uc-name">Tồn kho vs kế hoạch SX</div></div>
+    </div>
+  </div>
+
+  <div class="uc-group g4">
+    <div class="uc-head">AI báo cáo tháng / quý</div>
+    <div class="uc-grid">
+      <div class="uc-item" id="u-LD05" onclick="pick('LD05')"><div class="uc-id">UC-LD05</div><div class="uc-name">Báo cáo điều hành tháng</div></div>
+      <div class="uc-item" id="u-LD06" onclick="pick('LD06')"><div class="uc-id">UC-LD06</div><div class="uc-name">Rủi ro chiến lược</div></div>
+      <div class="uc-item" id="u-KT04" onclick="pick('KT04')"><div class="uc-id">UC-KT04</div><div class="uc-name">Phân tích biến động P&L</div></div>
+      <div class="uc-item" id="u-KT06" onclick="pick('KT06')"><div class="uc-id">UC-KT06</div><div class="uc-name">Dự báo doanh thu 3T</div></div>
+      <div class="uc-item" id="u-BH06" onclick="pick('BH06')"><div class="uc-id">UC-BH06</div><div class="uc-name">Forecast bán hàng</div></div>
+      <div class="uc-item" id="u-SX06" onclick="pick('SX06')"><div class="uc-id">UC-SX06</div><div class="uc-name">OEE trend & cải tiến</div></div>
+      <div class="uc-item" id="u-MH05" onclick="pick('MH05')"><div class="uc-id">UC-MH05</div><div class="uc-name">Biến động giá mua</div></div>
+      <div class="uc-item" id="u-BT03" onclick="pick('BT03')"><div class="uc-id">UC-BT03</div><div class="uc-name">Kế hoạch bảo trì vs SX</div></div>
+      <div class="uc-item" id="u-BT05" onclick="pick('BT05')"><div class="uc-id">UC-BT05</div><div class="uc-name">Dự báo phụ tùng</div></div>
+      <div class="uc-item" id="u-KTE03" onclick="pick('KTE03')"><div class="uc-id">UC-KT_E03</div><div class="uc-name">Tác động ECO/ECN</div></div>
+    </div>
+  </div>
+
+  <div class="uc-group g5">
+    <div class="uc-head">AI nâng cao / On-demand</div>
+    <div class="uc-grid">
+      <div class="uc-item" id="u-SX07" onclick="pick('SX07')"><div class="uc-id">UC-SX07</div><div class="uc-name">Chẩn đoán 4M → OEE</div></div>
+      <div class="uc-item" id="u-CL07" onclick="pick('CL07')"><div class="uc-id">UC-CL07</div><div class="uc-name">Hỏi đáp IPC/ISO</div></div>
+      <div class="uc-item uc-adv" id="u-KTE04" onclick="pick('KTE04')"><div class="uc-id">UC-KT_E04</div><div class="uc-name">Hỗ trợ 5-Why / RCA</div></div>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:9px;color:#bbb;margin-top:2px">33 use-cases AI · click để xem chi tiết</div>
+</div>
+</div>
+</div>
+
+</div><!-- /mgrid -->
+
+<div class="legend">
+  <span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#aaa">Chú thích</span>
+  <div class="leg-item"><div style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border:1px solid #c8d8f0;border-radius:4px;background:#f0f4ff"><span style="font-size:9px;color:#3d6ef5;font-weight:600">Data pipeline n (VM)</span></div>= luồng dữ liệu chạy trên Google Cloud VM</div>
+  <div class="leg-item"><span style="font-size:9px;color:#e8440a;font-weight:700;padding:2px 6px;border:1px solid #f5c090;border-radius:3px;background:#fff8f0">ETL</span>= transform Lake → Warehouse</div>
+  <div class="leg-item"><span style="padding:2px 6px;border:1px solid #f5c060;border-radius:3px;background:#fff3dc;font-size:9px;color:#a06000;font-weight:700">UC-LD01–UC-KT_E04</span>= 33 use-cases AI · click để xem chi tiết</div>
+  <span style="margin-left:auto;font-size:10px;color:#bbb;font-style:italic">DE — Hanel PT · AI BrainOS · 2026</span>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer" id="drawer">
+  <div class="dhead">
+    <div class="dbadge" id="db"></div>
+    <div><div class="dname" id="dn"></div><div class="dtech" id="dt"></div></div>
+    <div class="dclose" onclick="close_()">✕</div>
+  </div>
+  <div class="dbody" id="dd"></div>
+</div>
+
+</div><!-- /card -->
+</div><!-- /tab-overview -->
+
+<!-- ═══════════════════ TAB: LƯU TRỮ ═══════════════════ -->
+<div class="tabpage" id="tab-storage">
+<div class="dp-page">
+
+  <div class="dp-section">
+    <div class="dp-sec-title"><span class="hn2" style="background:#1060a0;padding:3px 10px">Lake</span>Data Lake — Lưu trữ thô, bất biến</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="dp-card" style="border-left:4px solid #3d6ef5">
+        <div class="dp-card-title">⚙ Dữ liệu cấu trúc — Bravo ERP</div>
+        <div class="dp-card-sub">Bravo REST API · n8n/Airbyte · Data pipeline</div>
+        <div class="dp-card-body">
+          <p style="margin-bottom:8px;color:#444">Toàn bộ module Bravo lưu dạng JSON event, append-only:</p>
+          <ul>
+            <li><strong>Kế toán, công nợ AR/AP</strong> — mọi giao dịch tài chính</li>
+            <li><strong>Mua hàng, bán hàng</strong> — PO, SO, hóa đơn, nhận hàng</li>
+            <li><strong>Kho, sản xuất</strong> — WO, BOM, nhập xuất tồn, sản lượng</li>
+            <li><strong>Nhân sự</strong> — chấm công, lương, hợp đồng lao động</li>
+          </ul>
+          <div class="dp-card-code">call_id · occurred_at · module_type · record_id<br>payload_json · created_at · sync_batch_id</div>
+          <div class="dp-card-foot"><strong>Đối tượng:</strong> Data engineer (audit) · AI agent (query lịch sử) · DWH transform</div>
+        </div>
+      </div>
+      <div class="dp-card" style="border-left:4px solid #3d6ef5">
+        <div class="dp-card-title">📁 File phi cấu trúc — NAS nội bộ</div>
+        <div class="dp-card-sub">NAS sync · ETL pipeline · RAG indexer</div>
+        <div class="dp-card-body">
+          <p style="margin-bottom:8px;color:#444">Tài liệu Excel/Word/PDF lưu nguyên bản trước khi xử lý:</p>
+          <ul>
+            <li><strong>SOP/WI, tiêu chuẩn IPC/ISO</strong> — quy trình kỹ thuật</li>
+            <li><strong>8D/CAR/NCR</strong> — hồ sơ giải quyết sự cố chất lượng</li>
+            <li><strong>Hợp đồng, báo giá NCC</strong> — tài liệu thương mại</li>
+            <li><strong>Ngân sách, nhật ký bảo trì, nhật ký ca</strong></li>
+          </ul>
+          <div class="dp-card-code">file_path · file_type · version · last_modified<br>department · extracted_text · embed_status</div>
+          <div class="dp-card-foot"><strong>Đối tượng:</strong> Knowledge Brain RAG · UC tra cứu SOP/IPC · QA engineering</div>
+        </div>
+      </div>
+      <div class="dp-card" style="border-left:4px solid #7c5cfc">
+        <div class="dp-card-title">🏭 Máy / IoT</div>
+        <div class="dp-card-sub">MQTT / OPC-UA · IoT pipeline · realtime stream</div>
+        <div class="dp-card-body">
+          <p style="margin-bottom:8px;color:#444">Dữ liệu thiết bị nhà máy stream liên tục:</p>
+          <ul>
+            <li><strong>Downtime log</strong> — equipment_id, alarm_code, duration, timestamp</li>
+            <li><strong>Sản lượng thực</strong> — counter từ sensor SMT/AOI/Reflow</li>
+            <li><strong>Cảnh báo alarm</strong> — mã lỗi, ngưỡng nhiệt độ/áp suất</li>
+          </ul>
+          <div class="dp-card-code">equipment_id · alarm_code · occurred_at<br>duration_sec · sensor_value · line_id</div>
+          <div class="dp-card-foot"><strong>Đối tượng:</strong> Production AI (OEE) · Maintenance AI (predictive) · Engineering</div>
+        </div>
+      </div>
+      <div class="dp-card" style="border-left:4px solid #f5a623">
+        <div class="dp-card-title">🎙 CRM & Thoại — BASE CRM + Omicall</div>
+        <div class="dp-card-sub">BASE CRM API · Omicall STT · webhook realtime</div>
+        <div class="dp-card-body">
+          <p style="margin-bottom:8px;color:#444">Dữ liệu khách hàng và giao tiếp:</p>
+          <ul>
+            <li><strong>BASE CRM</strong> — khách hàng, cơ hội deal, lịch sử tương tác</li>
+            <li><strong>Omicall STT</strong> — ghi âm → transcript văn bản → sentiment</li>
+            <li>Lưu vĩnh viễn kể cả sau khi nhân viên nghỉ</li>
+          </ul>
+          <div class="dp-card-code">call_id · deal_id · owner_id · occurred_at<br>transcript_text · sentiment_score · ai_summary</div>
+          <div class="dp-card-foot"><strong>Đối tượng:</strong> Revenue Mart · AI Sales · Knowledge Brain</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dp-section">
+    <div class="dp-sec-title"><span class="hn2" style="background:#1a6020;padding:3px 10px">DWH</span>Data Warehouse — Chuẩn hóa & làm giàu</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="dp-card" style="border-left:4px solid #2dc98a">
+        <div class="dp-card-title">⭐ Dữ liệu thô → Star schema</div>
+        <div class="dp-card-sub">Dataform SQL DAG · dbt models · bảng core</div>
+        <div class="dp-card-body">
+          <p style="margin-bottom:8px;color:#444">JSON raw từ Bravo transform thành star schema chuẩn hóa:</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;margin-bottom:8px">
+            <div style="padding:4px 8px;background:#f0f4ff;border-radius:4px;color:#3d6ef5"><strong>fact_production</strong> — sản xuất</div>
+            <div style="padding:4px 8px;background:#f0f4ff;border-radius:4px;color:#3d6ef5"><strong>fact_quality</strong> — chất lượng</div>
+            <div style="padding:4px 8px;background:#f9f5ff;border-radius:4px;color:#5830d8"><strong>fact_finance</strong> — tài chính</div>
+            <div style="padding:4px 8px;background:#f9f5ff;border-radius:4px;color:#5830d8"><strong>dim_product</strong> — sản phẩm</div>
+            <div style="padding:4px 8px;background:#f9f5ff;border-radius:4px;color:#5830d8"><strong>dim_employee</strong> — nhân sự</div>
+            <div style="padding:4px 8px;background:#f0faf5;border-radius:4px;color:#1a6020"><strong>dim_supplier</strong> — nhà cung cấp</div>
+          </div>
+          <div style="padding:6px 10px;background:#e8f5e8;border-radius:6px;font-size:10px;color:#1a6020"><strong>Đối tượng:</strong> BI reports · Claude AI (SQL query) · Data analyst</div>
+        </div>
+      </div>
+      <div class="dp-card" style="border-left:4px solid #2dc98a">
+        <div class="dp-card-title">🤖 File phi cấu trúc → Bảng AI + RAG Index</div>
+        <div class="dp-card-sub">Claude scan · ETL pipeline · Vector embedding</div>
+        <div class="dp-card-body">
+          <p style="margin-bottom:8px;color:#444">AI xử lý tài liệu phi cấu trúc, trả ra dữ liệu có cấu trúc:</p>
+          <ul>
+            <li><strong>8D/CAR/NCR</strong> — extract: ngày mở, owner, root cause, action, status</li>
+            <li><strong>SOP/WI</strong> — chunk text → vector embedding → Knowledge Index</li>
+            <li><strong>ECO/ECN log</strong> — before/after PPM, ngày áp dụng, dòng/công đoạn</li>
+            <li><strong>Nhật ký bảo trì</strong> — failure pattern, spare parts, downtime reason</li>
+          </ul>
+          <div style="padding:6px 10px;background:#e8f5e8;border-radius:6px;font-size:10px;color:#1a6020"><strong>Đối tượng:</strong> Quality AI · Engineering AI · Knowledge Brain RAG</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dp-section">
+    <div class="dp-sec-title"><span class="hn2" style="background:#5830d8;padding:3px 10px">Mart</span>Data Mart — Xây theo nhu cầu phân tích AI</div>
+    <p style="font-size:12px;color:#666;margin-bottom:14px">Mỗi data mart pre-aggregated, pre-joined cho từng nhóm use-case — Claude query dưới 3 giây.</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">Finance Mart</div><div class="dp-card-sub">UC-KT03, UC-KT04, UC-KT06</div><div class="dp-card-body"><ul><li>P&L · dòng tiền · công nợ AR/AP aging</li><li>Giá thành thực tế theo WO/sản phẩm</li><li>Rolling forecast 3 tháng</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> CFO · Kế toán trưởng · BLĐ (phân quyền nghiêm ngặt)</div></div></div>
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">Revenue Mart</div><div class="dp-card-sub">UC-BH02, UC-BH05, UC-BH06</div><div class="dp-card-body"><ul><li>SO · booking · forecast khách/model</li><li>CRM deal pipeline + stage</li><li>Churn risk signal: PPM + công nợ + PO</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> Sales manager · BLĐ kinh doanh</div></div></div>
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">Procurement Mart</div><div class="dp-card-sub">UC-MH03, UC-MH04, UC-MH05</div><div class="dp-card-body"><ul><li>PO · nhận hàng · lịch sử giá NCC</li><li>Scorecard NCC: OTD/PPM/giá</li><li>Single-source risk mapping</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> Trưởng mua hàng · BLĐ chuỗi cung ứng</div></div></div>
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">Inventory Mart</div><div class="dp-card-sub">UC-KO01, UC-KO04</div><div class="dp-card-body"><ul><li>Tồn kho theo mã/kho/lô/MSL</li><li>Fast/slow/dead stock aging</li><li>BOM explosion × WO demand</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> Quản lý kho · Planning · Mua hàng</div></div></div>
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">Planning Mart</div><div class="dp-card-sub">UC-KH02, UC-KH03, UC-KH04</div><div class="dp-card-body"><ul><li>WO · MPS/MRP · năng lực line</li><li>Demand vs capacity tuần/tháng</li><li>What-if scenario history</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> Lead planner · Quản đốc · BLĐ</div></div></div>
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">Production Mart</div><div class="dp-card-sub">UC-SX02, UC-SX06, UC-SX07</div><div class="dp-card-body"><ul><li>OEE = A×P×Q theo line/ca/ngày</li><li>Downtime log + IoT alarm</li><li>Pareto nguyên nhân dừng chuyền</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> Quản đốc · IE engineer · BLĐ SX</div></div></div>
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">Quality Mart</div><div class="dp-card-sub">UC-CL02, UC-CL03, UC-CL07</div><div class="dp-card-body"><ul><li>PPM · FPY · COPQ đa chiều</li><li>8D/CAR/NCR structured extract</li><li>AOI/SPI defect trend</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> QA manager · Kỹ thuật · BLĐ</div></div></div>
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">Engineering Mart</div><div class="dp-card-sub">UC-KT_E01, UC-KT_E03, UC-KT_E04</div><div class="dp-card-body"><ul><li>BOM · ECO/ECN log với before/after PPM</li><li>SOP/WI version index</li><li>NPI gate checklist status</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> Kỹ sư · Kỹ thuật trưởng</div></div></div>
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">Maintenance Mart</div><div class="dp-card-sub">UC-BT02, UC-BT03, UC-BT05</div><div class="dp-card-body"><ul><li>MTBF/MTTR · alarm IoT frequency</li><li>Failure probability scoring</li><li>Spare parts forecast</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> Trưởng bảo trì · Planning</div></div></div>
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">HR Mart</div><div class="dp-card-sub">UC-NS02, UC-NS04</div><div class="dp-card-body"><ul><li>Chấm công · OT · lương · skill matrix</li><li>Churn risk: OT trend + vắng + năng suất</li><li>Training gap vs production capacity</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> HR manager · Quản đốc (skill gap)</div></div></div>
+      <div class="dp-card" style="border-top:3px solid #7c5cfc"><div class="dp-card-title">Knowledge Index (RAG)</div><div class="dp-card-sub">UC-CL07, UC-KT_E01, UC-KT_E04</div><div class="dp-card-body"><ul><li>Vector embeddings: SOP/WI · IPC/ISO · 8D</li><li>Semantic search + cited answer</li><li>RBAC: mỗi role thấy tài liệu được phép</li></ul><div class="dp-card-foot"><strong>Dùng:</strong> Kỹ sư · QA · Toàn bộ phân hệ</div></div></div>
+    </div>
+    <div style="margin-top:16px;border:2px solid #e84545;border-radius:10px;padding:14px 18px;background:#fff8f8;display:flex;align-items:flex-start;gap:14px">
+      <div style="font-size:22px;flex-shrink:0">⚠️</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#c01010;margin-bottom:8px">Nguyên tắc bắt buộc khi xây Data Mart</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">
+          <div style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:#555"><span style="color:#e84545;font-weight:700;flex-shrink:0">✕</span><span><strong>Không đọc thẳng từ Data Lake</strong> — luôn build qua DWH, tránh query raw JSON tốn kém và không nhất quán</span></div>
+          <div style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:#555"><span style="color:#e84545;font-weight:700;flex-shrink:0">✕</span><span><strong>Không để Claude query DWH trực tiếp</strong> — phải qua data mart đã pre-join, đảm bảo latency &lt; 3 giây</span></div>
+          <div style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:#555"><span style="color:#e84545;font-weight:700;flex-shrink:0">✕</span><span><strong>Không bỏ Row-level Security</strong> — mỗi mart phải có RLS theo đúng đối tượng</span></div>
+          <div style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:#555"><span style="color:#e84545;font-weight:700;flex-shrink:0">✕</span><span><strong>Không rebuild toàn bộ</strong> — chỉ incremental refresh, tránh vượt budget BigQuery</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════ TAB: CLAUDE 33 UC ═══════════════════ -->
+<div class="tabpage" id="tab-ai">
+<div class="dp-page">
+
+  <div class="dp-section">
+    <div class="dp-sec-title"><span class="hn2" style="background:#1a6a3a;padding:3px 10px">Kết nối</span>Các bước kết nối Claude với Data Marts (BigQuery)</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin-bottom:16px">
+      <div style="border:1px solid #e4e8f4;border-right:none;border-radius:8px 0 0 8px;padding:14px;background:#fff">
+        <div style="font-size:9px;font-weight:700;color:#1a6a3a;letter-spacing:.1em;margin-bottom:6px">BƯỚC 1</div>
+        <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:6px">Cấp quyền read-only</div>
+        <div style="font-size:11px;color:#666;line-height:1.5">Tạo Google Service Account cho Claude với quyền <code style="background:#f0f4ff;padding:1px 4px;border-radius:3px;color:#3d6ef5">BigQuery Data Viewer</code> — chỉ đọc, không ghi. RBAC theo vai trò người dùng.</div>
+      </div>
+      <div style="font-size:18px;color:#bbb;display:flex;align-items:center;justify-content:center;background:#fafbff;border-top:1px solid #e4e8f4;border-bottom:1px solid #e4e8f4">→</div>
+      <div style="border:1px solid #e4e8f4;border-right:none;border-left:none;padding:14px;background:#fff">
+        <div style="font-size:9px;font-weight:700;color:#1a6a3a;letter-spacing:.1em;margin-bottom:6px">BƯỚC 2</div>
+        <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:6px">Viết Skill.md</div>
+        <div style="font-size:11px;color:#666;line-height:1.5">Tài liệu mô tả schema 11 data mart, tên cột, enum values, quy tắc nghiệp vụ — giúp Claude hiểu đúng cấu trúc dữ liệu Hanel PT.</div>
+      </div>
+      <div style="font-size:18px;color:#bbb;display:flex;align-items:center;justify-content:center;background:#fafbff;border-top:1px solid #e4e8f4;border-bottom:1px solid #e4e8f4">→</div>
+      <div style="border:1px solid #e4e8f4;border-left:none;border-right:none;padding:14px;background:#fff">
+        <div style="font-size:9px;font-weight:700;color:#1a6a3a;letter-spacing:.1em;margin-bottom:6px">BƯỚC 3</div>
+        <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:6px">Middleware trên VM</div>
+        <div style="font-size:11px;color:#666;line-height:1.5">API server nhận câu hỏi → gọi Claude API kèm Skill.md → nhận SQL từ Claude → thực thi trên BigQuery read-only → trả kết quả.</div>
+      </div>
+      <div style="font-size:18px;color:#bbb;display:flex;align-items:center;justify-content:center;background:#fafbff;border-top:1px solid #e4e8f4;border-bottom:1px solid #e4e8f4">→</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:16px">
+      <div style="border:1px solid #e4e8f4;border-right:none;border-radius:8px 0 0 8px;padding:14px;background:#fff">
+        <div style="font-size:9px;font-weight:700;color:#1a6a3a;letter-spacing:.1em;margin-bottom:6px">BƯỚC 4</div>
+        <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:6px">Người dùng gửi câu hỏi</div>
+        <div style="font-size:11px;color:#666;line-height:1.5">Manager, lãnh đạo, kỹ sư gõ câu hỏi tiếng Việt tự nhiên qua giao diện chat tích hợp vào Base Message hoặc web app riêng.</div>
+      </div>
+      <div style="font-size:18px;color:#bbb;display:flex;align-items:center;justify-content:center;background:#fafbff;border-top:1px solid #e4e8f4;border-bottom:1px solid #e4e8f4">→</div>
+      <div style="border:1px solid #e4e8f4;border-left:none;border-right:none;padding:14px;background:#fff">
+        <div style="font-size:9px;font-weight:700;color:#1a6a3a;letter-spacing:.1em;margin-bottom:6px">BƯỚC 5</div>
+        <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:6px">Claude sinh SQL + query</div>
+        <div style="font-size:11px;color:#666;line-height:1.5">Claude đọc Skill.md → xác định data mart phù hợp → sinh câu SQL an toàn → middleware thực thi trên BigQuery read-only.</div>
+        <div style="margin-top:6px;padding:4px 8px;background:#f0f4ff;border-radius:4px;font-size:10px;font-family:monospace;color:#3d6ef5">SELECT * FROM mart_production WHERE line_id = 'SMT-03' AND date = CURRENT_DATE()</div>
+      </div>
+      <div style="font-size:18px;color:#bbb;display:flex;align-items:center;justify-content:center;background:#fafbff;border-top:1px solid #e4e8f4;border-bottom:1px solid #e4e8f4">→</div>
+    </div>
+    <div style="border:1px solid #2dc98a;border-radius:8px;padding:14px 18px;background:#f4fbf7;display:flex;align-items:flex-start;gap:14px">
+      <div style="font-size:20px;flex-shrink:0">✅</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#1a6020;margin-bottom:4px">BƯỚC 6 — Trả kết quả cho người dùng</div>
+        <div style="font-size:12px;color:#555;line-height:1.55">Claude nhận JSON từ BigQuery → tổng hợp thành ngôn ngữ tự nhiên tiếng Việt → kèm số liệu cụ thể, cảnh báo nếu phát hiện vấn đề, gợi ý hành động tiếp theo. Latency toàn bộ: <strong>3–5 giây</strong>.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dp-section">
+    <div class="dp-sec-title"><span class="hn2" style="background:#5830d8;padding:3px 10px">Lý do</span>Tại sao Claude kết nối Data Mart thay vì Data Warehouse?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div style="border:2px solid #e84545;border-radius:10px;padding:14px 16px;background:#fff8f8">
+        <div style="font-size:13px;font-weight:700;color:#c01010;margin-bottom:10px">✕ Nếu Claude query thẳng Data Warehouse</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;gap:8px;font-size:12px;color:#555"><span style="color:#e84545;flex-shrink:0">⚠</span><span><strong>Chậm:</strong> DWH chứa hàng triệu raw records — mỗi query phải join nhiều bảng, latency 10–30 giây</span></div>
+          <div style="display:flex;gap:8px;font-size:12px;color:#555"><span style="color:#e84545;flex-shrink:0">⚠</span><span><strong>Tốn kém:</strong> BigQuery tính tiền theo dữ liệu scan — query DWH lớn có thể vượt budget</span></div>
+          <div style="display:flex;gap:8px;font-size:12px;color:#555"><span style="color:#e84545;flex-shrink:0">⚠</span><span><strong>Rủi ro bảo mật:</strong> DWH chứa mọi thứ — khó kiểm soát Claude xem gì, ai được xem gì</span></div>
+          <div style="display:flex;gap:8px;font-size:12px;color:#555"><span style="color:#e84545;flex-shrink:0">⚠</span><span><strong>Dễ sai:</strong> Claude phải tự join nhiều bảng → có thể sinh SQL sai logic nghiệp vụ</span></div>
+        </div>
+      </div>
+      <div style="border:2px solid #2dc98a;border-radius:10px;padding:14px 16px;background:#f4fbf7">
+        <div style="font-size:13px;font-weight:700;color:#1a6020;margin-bottom:10px">✓ Khi Claude query qua Data Mart</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;gap:8px;font-size:12px;color:#555"><span style="color:#2dc98a;flex-shrink:0">✓</span><span><strong>Nhanh:</strong> Mart đã pre-aggregated, pre-joined — query đơn giản, latency &lt; 3 giây</span></div>
+          <div style="display:flex;gap:8px;font-size:12px;color:#555"><span style="color:#2dc98a;flex-shrink:0">✓</span><span><strong>Tiết kiệm:</strong> Mart nhỏ hơn DWH 10–50 lần — chi phí scan thấp, nằm trong budget</span></div>
+          <div style="display:flex;gap:8px;font-size:12px;color:#555"><span style="color:#2dc98a;flex-shrink:0">✓</span><span><strong>Kiểm soát bảo mật:</strong> Mỗi mart có RLS riêng — quản đốc chỉ thấy line mình, lãnh đạo thấy tất cả</span></div>
+          <div style="display:flex;gap:8px;font-size:12px;color:#555"><span style="color:#2dc98a;flex-shrink:0">✓</span><span><strong>Chính xác hơn:</strong> Logic join và tính toán đã định nghĩa sẵn trong mart — Claude chỉ cần SELECT</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="border:1px solid #c8d8f8;border-radius:8px;padding:12px 16px;background:#f0f4ff;font-size:12px;color:#3d6ef5;line-height:1.6">
+      <strong>Ví dụ thực tế:</strong> Câu hỏi <em>"Line SMT-03 hôm nay OEE bao nhiêu, nguyên nhân dừng chuyền chính là gì?"</em><br>
+      Query vào <strong>mart_production</strong> (đã pre-join WO + downtime + IoT, đã lọc theo RLS) → 0.3MB data scan → &lt; 2 giây<br>
+      Nếu query DWH raw → phải join fact_production × dim_equipment × iot_alarm_log × dim_shift → 2GB+ data scan → 15–30 giây + tốn ~$0.01 mỗi query
+    </div>
+  </div>
+
+  <div class="dp-section">
+    <div class="dp-sec-title"><span class="hn2" style="background:#1a6a3a;padding:3px 10px">33 UC</span>Chi tiết 33 use-cases — Data mart và cách Claude xử lý</div>
+    <table class="uc-table" id="uc-main-table">
+      <thead><tr>
+        <th style="width:110px">ID</th>
+        <th>Tên use-case</th>
+        <th style="width:90px">Nhóm</th>
+        <th style="width:160px">Data mart</th>
+        <th>Claude làm gì</th>
+      </tr></thead>
+      <tbody id="uc-tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────────
+const D = {
+  bravo:{badge:'Số hóa · ERP',name:'Bravo ERP',tech:'REST API · batch hàng đêm + realtime webhook',
+    role:['Nguồn dữ liệu cấu trúc chính: kế toán, mua hàng, bán hàng, kho, sản xuất (WO/BOM), nhân sự, tài sản','Kết nối qua Bravo REST API — sync batch hàng đêm hoặc webhook realtime','Incremental sync: chỉ lấy records thay đổi kể từ lần cuối'],
+    flow:['API call → n8n/Airbyte pipeline → Data Lake (append-only)','Validation schema trước khi ghi vào Lake','Mapping field Bravo → star schema DWH'],
+    note:['Cần Bravo admin cấp API token read-only','Backup daily snapshot phòng khi API down','Toàn bộ module: kế toán, mua hàng, bán hàng, kho, SX, HR, tài sản']},
+  files:{badge:'Số hóa · File ngoài',name:'File ngoài (NAS nội bộ)',tech:'ETL pipeline định kỳ · NAS folder sync',
+    role:['SOP/WI, tiêu chuẩn IPC-A-610, ISO 9001 — tài liệu kỹ thuật','Hồ sơ 8D/CAR/NCR — sự cố chất lượng','Ngân sách Excel, hợp đồng PDF, báo giá NCC','Nhật ký bảo trì, nhật ký ca, kế hoạch tài chính'],
+    flow:['NAS folder watch → ETL quét file mới/cập nhật','Extract text: PDF→text, Excel→CSV, Word→text','Structured files → DWH tables; Unstructured → RAG Knowledge Index'],
+    note:['Quy tắc đặt tên file nhất quán trước khi ingest','Ưu tiên phiên bản mới nhất khi có nhiều version','RAG index update trong 24h khi SOP/tiêu chuẩn mới']},
+  crm:{badge:'Số hóa · CRM & Thoại',name:'CRM & Thoại — BASE + Omicall',tech:'BASE CRM API · Omicall STT · webhook realtime',
+    role:['BASE CRM: khách hàng, cơ hội deal, lịch sử tương tác, SLA','Omicall: ghi âm cuộc gọi → STT → transcript văn bản','Lưu kèm deal_id, owner_id, sentiment score, ai_summary'],
+    flow:['BASE CRM webhook realtime + batch backup mỗi 5 phút','Omicall: audio → STT → transcript → sentiment → Lake','Transcript → DWH structured → Revenue Mart + Knowledge Index'],
+    note:['Omicall STT cần fine-tune cho tiếng Việt ngành điện tử','Audio gốc (.mp3) lưu bất biến vĩnh viễn','Phân quyền: sales chỉ nghe cuộc gọi của mình']},
+  iot:{badge:'Số hóa · Máy/IoT',name:'Máy / IoT — Thiết bị nhà máy',tech:'MQTT broker · OPC-UA · Cloud Pub/Sub · realtime',
+    role:['Downtime log: equipment_id, alarm_code, duration, timestamp','Sản lượng thực từ sensor (SMT, AOI, SPI, lò reflow, wave solder)','Alarm code + ngưỡng nhiệt độ/áp suất/rung động'],
+    flow:['Sensor/PLC → MQTT broker → Cloud Pub/Sub → BigQuery streaming','Latency mục tiêu: <5 phút từ thiết bị đến mart','Alert rule: alarm liên tục >15 phút → trigger UC-SX02'],
+    note:['Thiết bị chưa có MQTT cần thêm OPC-UA adapter','Buffer local tại nhà máy phòng mất mạng','IoT data là input quan trọng nhất cho Predictive Maintenance']},
+  lake:{badge:'Lưu trữ · Data Lake',name:'Data Lake — Google BigQuery',tech:'BigQuery · append-only · immutable · ~500GB+',
+    role:['Lưu toàn bộ dữ liệu thô: JSON event, IoT log, file extract, transcript','Không bao giờ xóa — lưu vĩnh viễn cho audit và retrain AI','Partitioned theo tháng để tối ưu query cost'],
+    flow:['Pipeline Bravo: append-only write hàng đêm','Pipeline IoT: stream insert realtime','Pipeline file: extract text → append','ETL sang DWH qua Dataform/dbt pipeline'],
+    note:['Chỉ Data Engineer được đọc Lake trực tiếp','Hot tier 90 ngày, cold tier sau đó','Không để Claude hay BI query Lake trực tiếp']},
+  dwh:{badge:'Lưu trữ · Data Warehouse',name:'Data Warehouse — Google BigQuery',tech:'BigQuery + Dataform/dbt · SQL · chuẩn hóa',
+    role:['Một nguồn sự thật (single source of truth) cho toàn Hanel PT','Star schema: fact tables (giao dịch) + dimension tables (danh mục)','KPI dictionary thống nhất — mỗi chỉ số 1 định nghĩa'],
+    flow:['Lake → Dataform SQL DAG → DWH tables → 11 Data Marts','Data quality tests tự động sau mỗi transform','Alert email khi data quality test fail'],
+    note:['DWH refresh T-1 batch; near-realtime cho Production/IoT','Claude không query DWH trực tiếp — phải qua Mart','Lineage tracking: biết mỗi cột đến từ nguồn nào']},
+  mon:{badge:'Giám sát · Monitoring',name:'Monitoring — Google Cloud Monitoring',tech:'GCP Monitoring · Alerting · uptime checks',
+    role:['VM health: CPU, RAM, disk, network pipeline','Pipeline error rate và latency theo từng nguồn','Uptime checks mỗi 1 phút cho API endpoints'],
+    flow:['VM agent push metrics mỗi 60s → Cloud Monitoring','Alert → Gmail khi vượt threshold','Dashboard ops cho Data Engineer'],
+    note:['Setup trước go-live','SLA pipeline: 99.5% uptime','On-call rotation cho Data Engineer']},
+  gmail:{badge:'Giám sát · Alert',name:'Mail Alerting — Gmail / Email',tech:'Gmail SMTP · alert template',
+    role:['Alert kỹ thuật khi infra lỗi (pipeline down, DLQ backlog)','Daily digest 8h sáng cho Data Engineer','Alert nghiệp vụ quan trọng cho BLĐ'],
+    flow:['Cloud Monitoring → Gmail alert rule','DLQ backlog → digest email','Scheduled reports → auto-send'],
+    note:['SLA CRITICAL < 30 phút response','Phân cấp alert: CRITICAL/WARNING/INFO','Không spam — chỉ gửi khi cần action']},
+  basemsg:{badge:'Giám sát · Alert',name:'Base Message Alert',tech:'Base webhook · notification',
+    role:['Alert nghiệp vụ cho manager và quản đốc','WO trễ, alarm máy, MSL sắp hết hạn','UC trigger tự động gửi đúng người phụ trách'],
+    flow:['Pipeline trigger → Base webhook → owner_id','Phân quyền: alert đến đúng người phụ trách','Kết hợp với UC để gửi insight tự động'],
+    note:['Kênh alert nghiệp vụ chính','Không để alert làm phiền — threshold thông minh','Liên kết với Base CRM để track action']},
+  backlog:{badge:'Giám sát · DLQ',name:'Backlog Storage — PostgreSQL',tech:'PostgreSQL · DLQ · retry mechanism',
+    role:['Dead Letter Queue: lưu messages/records thất bại để retry','Retry tự động với exponential backoff (5→15→60 phút)','Alert khi DLQ backlog vượt ngưỡng'],
+    flow:['Failed pipeline event → DLQ PostgreSQL','Retry worker chạy mỗi 15 phút','Sau 3 lần fail → alert Data Engineer'],
+    note:['Retention DLQ: 30 ngày','Dashboard DLQ để monitoring','Runbook xử lý từng loại lỗi phổ biến']},
+  mfin:{badge:'Data Mart · Finance',name:'Finance Mart',tech:'BigQuery · Dataform · refresh hàng đêm',
+    role:['P&L tháng/quý/năm với variance analysis','Cash flow forecast rolling 4-8 tuần','Công nợ AR/AP aging: 0-30, 31-60, 61-90, >90 ngày'],
+    flow:['Bravo kế toán + công nợ + giá thành → DWH → Finance Mart','File ngân sách Excel + tỷ giá → merge vào Mart','Refresh hàng đêm + intraday cho cash flow'],
+    note:['Phân quyền nghiêm ngặt: chỉ CFO, kế toán trưởng, BLĐ','Giá thành và lương không để AI Sales truy cập','Số liệu phải khớp 100% Bravo — tiêu chí nghiệm thu']},
+  mrev:{badge:'Data Mart · Revenue',name:'Revenue Mart',tech:'BigQuery · refresh realtime CRM + batch Bravo',
+    role:['SO · booking · forecast theo khách hàng/model/tháng','CRM deal pipeline: stage, value, probability, owner','Phân tích churn risk: PPM + công nợ + PO trend'],
+    flow:['Bravo SO + hóa đơn + BASE CRM + Omicall → DWH → Revenue Mart','RLS: sales thấy deal mình, manager thấy team, BLĐ thấy tất cả'],
+    note:['Cần BASE CRM đồng bộ tốt deal stage','Omicall transcript làm giàu context','Forecast accuracy target: ≤15% error rolling 3 tháng']},
+  mpro:{badge:'Data Mart · Procurement',name:'Procurement Mart',tech:'BigQuery · refresh hàng ngày',
+    role:['PO history · nhận hàng thực tế · OTD theo NCC','Scorecard NCC: OTD + PPM đầu vào + biến động giá','Single-source risk: linh kiện nào chỉ có 1 NCC'],
+    flow:['Bravo PO + nhận hàng + IQC quality → DWH → Procurement Mart','Báo giá PDF/Excel NCC → extract → merge giá lịch sử'],
+    note:['IC/connector trọng yếu cần flag single-source','Kết hợp Inventory Mart để tính stockout risk','Cảnh báo phát trước lead-time thực tế']},
+  minv:{badge:'Data Mart · Inventory',name:'Inventory Mart',tech:'BigQuery · refresh realtime MSL + batch daily',
+    role:['Tồn kho real-time theo mã/kho/vị trí/lô/MSL','Aging bucket: 0-30, 31-90, 91-180, >180 ngày','BOM explosion × WO schedule = demand forecast'],
+    flow:['Bravo nhập-xuất-tồn + lô MSL → DWH → Inventory Mart','Cross với Planning Mart WO để tính impact'],
+    note:['MSL/shelf-life critical với IC nhạy ẩm','FIFO enforcement tự động theo lô','Safety stock level cần CFO + Supply Chain xác nhận']},
+  mpln:{badge:'Data Mart · Planning',name:'Planning Mart',tech:'BigQuery · refresh hàng ngày + manual refresh',
+    role:['WO schedule theo line/tuần + tiến độ thực tế','Demand vs capacity matrix: tải % từng line','What-if scenario history'],
+    flow:['Bravo WO + MPS/MRP + BOM + lịch ca → DWH → Planning Mart','Forecast bán hàng + lịch bảo trì → merge demand'],
+    note:['Lịch bảo trì và nghỉ phép cần sync','Changeover time matrix cần IE xây dựng','What-if engine không ghi vào DWH, chỉ temporary']},
+  mprd:{badge:'Data Mart · Production',name:'Production Mart',tech:'BigQuery · near-realtime IoT + batch hàng đêm',
+    role:['OEE = Availability × Performance × Quality theo line/ca/ngày','Downtime log: equipment_id + alarm_code + duration','Pareto nguyên nhân dừng chuyền tuần/tháng'],
+    flow:['Bravo WO sản lượng + IoT downtime alarm → DWH → Production Mart','Near-realtime <5 phút cho downtime alert','Batch hàng đêm cho OEE aggregation'],
+    note:['IoT data quality là bottleneck','NPM-DX alarm code mapping cần Maintenance confirm','OEE target EMS: >75% acceptable']},
+  mqua:{badge:'Data Mart · Quality',name:'Quality Mart',tech:'BigQuery · refresh hàng ngày + RAG extract',
+    role:['PPM theo khách hàng/model/line/công đoạn/ngày','FPY: SMT/DIP/AOI/SPI/Test riêng biệt','8D/CAR/NCR structured: ngày mở, owner, root cause, status'],
+    flow:['Bravo IQC/IPQC/OQC + phế phẩm → DWH → Quality Mart','RAG pipeline đọc 8D/CAR/NCR Word/PDF → extract structured'],
+    note:['8D extract cần Claude parse Word/PDF','PPM granular theo ngày cho SPC control chart','COPQ definition cần CFO + QA đồng thuận']},
+  meng:{badge:'Data Mart · Engineering',name:'Engineering Mart',tech:'BigQuery · refresh hàng ngày',
+    role:['BOM theo version + ECO/ECN log với ngày áp dụng','Before/after PPM/FPY theo ECO apply date','SOP/WI version index: file path, version, ngày review'],
+    flow:['Bravo BOM + WO-bản vẽ → DWH → Engineering Mart','ECO/ECN log từ file → extract structured → merge Quality Mart','SOP/WI NAS → text extract → vector embed → Knowledge Index'],
+    note:['ECO impact cần ≥2 tuần dữ liệu sau/trước','SOP phiên bản mới phải update RAG trong 24h','NPI gate data cần Engineering manager nhập ban đầu']},
+  mmnt:{badge:'Data Mart · Maintenance',name:'Maintenance Mart',tech:'BigQuery · refresh hàng ngày',
+    role:['MTBF/MTTR theo equipment_id/tháng/năm','Alarm frequency scoring: số alarm/tuần theo thiết bị','Failure probability model: tuổi + alarm trend'],
+    flow:['Bravo lịch sử bảo trì + chi phí → DWH → Maintenance Mart','IoT alarm log → failure pattern analysis → probability score','Nhật ký bảo trì Excel → extract → merge'],
+    note:['NPM-DX linear motor: lead-time 6 tuần','Failure probability model cần 6+ tháng baseline','Critical spares cần safety stock riêng']},
+  mhr:{badge:'Data Mart · HR',name:'HR Mart',tech:'BigQuery · refresh hàng ngày',
+    role:['Chấm công daily: present/absent/OT theo tổ/line','Skill matrix: employee × skill × level (0-3)','Churn risk signal: OT trend + vắng mặt + năng suất'],
+    flow:['Bravo nhân sự + chấm công + lương → DWH → HR Mart','Skill assessment file Excel → structured → merge'],
+    note:['Phân quyền chặt nhất: lương chỉ HR + CFO','Skill matrix update ít nhất hàng quý','Churn model cần HR validate trước deploy']},
+  mrag:{badge:'Data Mart · RAG',name:'Knowledge Index (RAG)',tech:'Vector DB · Embeddings · Semantic search',
+    role:['Index tài liệu phi cấu trúc: SOP/WI, IPC-A-610, ISO 9001, 8D/CAR, hợp đồng','Semantic search: hỏi tiếng Việt tự nhiên → trả lời kèm trích dẫn','Phân quyền: mỗi role thấy tài liệu được phép'],
+    flow:['NAS file → extract text → chunk (500 tokens, overlap 50) → embedding → vector DB','Claude query → semantic search → top-K chunks → answer + citation','Update index trong 24h khi tài liệu mới'],
+    note:['No hallucination: khi thiếu căn cứ phải nói rõ','Ưu tiên phiên bản mới nhất','Embedding model cần fine-tune cho thuật ngữ điện tử tiếng Việt']},
+  LD01:{badge:'UC-LD01 · Hàng ngày',name:'Cảnh báo rủi ro sáng',tech:'Tổng hợp đa Mart · digest 7h sáng',
+    role:['Điểm rủi ro tổng thể xanh/vàng/đỏ mỗi buổi sáng','Highlight top 3 vấn đề cần xử lý ngay cho CEO/COO','AI cross nhiều mart, phân mức tự động — BI không làm được'],
+    flow:['Claude đọc tất cả Mart → tổng hợp đa chiều','Query KPI ngoài ngưỡng từng mart','Gửi digest 7h sáng qua Base Message/email'],
+    note:['Dữ liệu T-1 — độ trễ thấp','Chỉ BLĐ thấy toàn bộ — phân quyền nghiêm ngặt','Ngưỡng cảnh báo BLĐ cấu hình lần đầu']},
+  BH02:{badge:'UC-BH02 · Hàng ngày',name:'Cảnh báo PO bất thường',tech:'Revenue Mart · threshold alert',
+    role:['Phát hiện khách hàng sụt PO ≥15% so tháng trước','Cảnh báo đơn hàng sắp hết hạn confirm','Push alert cho sales phụ trách khách hàng đó'],
+    flow:['So sánh SO lịch sử vs hiện tại Revenue Mart','Threshold alert tự động theo cấu hình'],
+    note:['RLS: sales chỉ thấy khách mình phụ trách','Cần BASE CRM đồng bộ deal','Omicall transcript làm giàu context nguyên nhân']},
+  SX02:{badge:'UC-SX02 · Hàng ngày',name:'Cảnh báo & chẩn đoán dừng chuyền',tech:'Production Mart + IoT · near-realtime',
+    role:['Alert khi line dừng >15 phút','Gợi ý nguyên nhân từ pattern lịch sử downtime tương tự','Escalate nếu chưa xử lý sau 30 phút'],
+    flow:['IoT alarm → Production Mart near-realtime','Pattern matching với lịch sử downtime cùng máy/ca','Độ trễ <5 phút'],
+    note:['Quản đốc nhận alert trực tiếp qua Base Message','AI đề xuất nguyên nhân — quản đốc xác nhận','Lưu root cause để cải thiện model theo thời gian']},
+  CL02:{badge:'UC-CL02 · Hàng ngày',name:'Phát hiện xu hướng lỗi sớm',tech:'Quality Mart · SPC · time-series',
+    role:['Lỗi nào đang tăng trend trong 3-7 ngày?','Cảnh báo trước khi bùng phát (tombstone, solder bridge)','Gợi ý nguyên nhân sơ bộ từ SPC pattern'],
+    flow:['PPM time-series Quality Mart','Statistical process control — control chart tự động','Alert đến QA manager khi trend vượt UCL'],
+    note:['BI không tự phát hiện pattern — đây là giá trị AI','Tombstone, solder bridge, cold joint là lỗi ưu tiên','Cần AOI/SPI data đủ granular theo ngày']},
+  KO01:{badge:'UC-KO01 · Hàng ngày',name:'Cảnh báo MSL & safety stock',tech:'Inventory Mart + Planning Mart',
+    role:['Mã nào dưới safety stock hôm nay','Lô nào sắp hết hạn MSL trong 7-14 ngày','Ảnh hưởng WO nào nếu không xử lý ngay'],
+    flow:['Inventory Mart daily snapshot','Cross với Planning Mart WO để tính impact','Alert MSL = today + 14 ngày'],
+    note:['MSL alert là critical — ảnh hưởng trực tiếp chất lượng','Hiển thị màn hình kho','FIFO tự động cho lô gần hết hạn']},
+  KTE01:{badge:'UC-KT_E01 · Hàng ngày',name:'Tra cứu SOP/WI ngôn ngữ tự nhiên',tech:'Knowledge Brain RAG · cited response',
+    role:['Công nhân/kỹ sư hỏi: quy trình làm X là gì?','Trả lời kèm số bước, số tài liệu, phiên bản','Dẫn đúng SOP nguồn — no hallucination'],
+    flow:['Knowledge Brain RAG đọc SOP/WI từ NAS','Semantic search + cited response','Phân quyền theo line/tài liệu'],
+    note:['Use case ROI cao nhất phân hệ Kỹ thuật','Tiết kiệm 15-20 phút/lần tra cứu thủ công','Update index trong 24h khi SOP mới']},
+  LD03:{badge:'UC-LD03 · Hàng tuần',name:'Báo cáo 4M tuần',tech:'HR + Production + Inventory + Engineering Mart',
+    role:['Tổng hợp Man/Machine/Material/Method theo tuần','Phát hiện nút thắt chéo phân hệ','AI sinh narrative tiếng Việt với 3 hành động ưu tiên'],
+    flow:['HR + Production + Inventory + Engineering Mart','Claude sinh narrative phân tích nguyên nhân','Gửi thứ 2 hàng tuần kèm so sánh tuần trước'],
+    note:['Không chỉ số — phải có narrative giải thích','Format cố định sau khi BLĐ duyệt lần đầu','Đây là use case cross-mart quan trọng nhất BLĐ']},
+  LD04:{badge:'UC-LD04 · Hàng tuần',name:'Cảnh báo rủi ro doanh nghiệp',tech:'Tổng hợp đa Mart · risk scoring',
+    role:['Quét 7 nhóm rủi ro: khách/NCC/tài chính/SX/nhân sự/công nghệ/tuân thủ','Phân mức xanh-vàng-đỏ tự động','Highlight rủi ro nào vừa tăng mức so tuần trước'],
+    flow:['Multi-mart scan toàn bộ phân hệ','So sánh với ngưỡng cấu hình bởi BLĐ','Chạy cuối tuần, báo cáo thứ 6 chiều'],
+    note:['Ngưỡng cảnh báo BLĐ xác nhận ban đầu','Gắn với UC-LD05 báo cáo tháng','Update khi có thay đổi chiến lược']},
+  KH03:{badge:'UC-KH03 · Hàng tuần',name:'Cân đối năng lực 4-8 tuần',tech:'Planning Mart · load chart',
+    role:['Demand vs capacity từng line theo tuần','Phát hiện bottleneck sắp tới','Đề xuất: giãn tải / thêm ca / chuyển line'],
+    flow:['MPS/MRP + forecast + lịch ca → Planning Mart','Claude tính load chart và reasoning giải pháp','Cập nhật mỗi thứ 2'],
+    note:['Lead planner review và confirm trước thực thi','Kết hợp lịch bảo trì tránh xung đột','Output: capacity plan gửi BLĐ sản xuất']},
+  KH04:{badge:'UC-KH04 · Hàng tuần',name:'Mô phỏng what-if',tech:'Planning + HR + Maintenance Mart · simulation',
+    role:['Tăng đơn 20% cần gì thêm?','Dời lịch bảo trì ảnh hưởng giao hàng thế nào?','Thiếu 5 công nhân SMT → sản lượng giảm bao nhiêu?'],
+    flow:['Planning + HR + Maintenance Mart','Simulation engine — kết quả không ghi vào DWH','Kết quả trong vài giây — lưu lịch sử kịch bản'],
+    note:['Planner xem xét và quyết định cuối','Use case thể hiện rõ nhất AI vs BI','Cần data readiness tốt ở cả 3 mart']},
+  KH02:{badge:'UC-KH02 · Hàng tuần',name:'Cảnh báo WO trễ tiến độ',tech:'Planning + Inventory + HR Mart · multi-mart',
+    role:['WO nào đang tụt so kế hoạch?','Chẩn đoán nguyên nhân: thiếu vật tư / nhân lực / máy?','Đề xuất điều chỉnh ưu tiên tức thì'],
+    flow:['Cross Planning + Inventory + HR Mart','AI multi-mart để xác định nguyên nhân gốc','Alert khi WO lag >1 ngày'],
+    note:['Gửi lead planner và quản đốc liên quan','Liên kết với UC-KH03 cân đối năng lực','Nguyên nhân cần xác nhận trước escalate']},
+  BH05:{badge:'UC-BH05 · Hàng tuần',name:'Insight & dự báo khách hàng',tech:'Revenue + Quality + Finance Mart',
+    role:['Phân khúc khách theo tiềm năng tăng trưởng','Churn risk từ PPM + công nợ + PO trend','Đề xuất next action cho từng phân khúc'],
+    flow:['Cross Revenue + Quality + Finance Mart','AI đánh giá sức khỏe quan hệ khách hàng','Cần lịch sử ≥6 tháng'],
+    note:['Output: danh sách ưu tiên gửi sales manager','Validate signal churn với sales trước deploy','Cross-mart phức tạp — cần data quality tốt']},
+  CL03:{badge:'UC-CL03 · Hàng tuần',name:'Tổng hợp & theo dõi 8D/CAR/NCR',tech:'Quality Mart + Knowledge Brain RAG',
+    role:['Bao nhiêu 8D mở, quá hạn?','CAR nào nguy cơ tái diễn lỗi?','Trích xuất action items và owner từ Word/PDF'],
+    flow:['RAG pipeline đọc 8D/CAR/NCR Word/PDF từ NAS','Extract: ngày mở, hạn, owner, trạng thái, action','Kết hợp Quality Mart và Knowledge Brain'],
+    note:['Cần pipeline ingest file định kỳ từ NAS','Naming convention file nhất quán','QA xác nhận extract trước khi tự động hoàn toàn']},
+  MH03:{badge:'UC-MH03 · Hàng tuần',name:'Dự báo thiếu hụt vật tư',tech:'Inventory + Planning + Procurement Mart',
+    role:['Mã nào dưới safety stock ảnh hưởng WO nào?','Đề xuất PO khẩn hay nguồn thay thế','Nhắc mốc đặt hàng theo lead-time thực tế'],
+    flow:['Cross Inventory + Planning + Procurement Mart','MRP-style demand vs supply matching tự động'],
+    note:['Use case giá trị cao nhất Mua hàng AI','Alert phát trước lead-time để kịp xử lý','Kết nối với Procurement action: tạo PO suggestion']},
+  MH04:{badge:'UC-MH04 · Hàng tuần',name:'Cảnh báo single-source risk',tech:'Procurement Mart · risk scoring',
+    role:['Linh kiện nào chỉ có 1 NCC?','Rủi ro tập trung theo NCC/quốc gia xuất xứ','Đề xuất ưu tiên phát triển nguồn thứ hai'],
+    flow:['Procurement Mart supplier-material mapping','Risk scoring + criticality sản phẩm'],
+    note:['IC/connector trọng yếu ưu tiên hàng đầu','Engineering confirm criticality từng linh kiện','Liên kết với chiến lược sourcing dài hạn']},
+  BT02:{badge:'UC-BT02 · Hàng tuần',name:'Dự báo hỏng & bảo trì phòng ngừa',tech:'Maintenance Mart + IoT · predictive AI',
+    role:['Thiết bị nào xác suất hỏng cao 7-30 ngày?','Dựa trên alarm frequency + lịch sử + tuổi thiết bị','Đề xuất lịch bảo trì phòng ngừa cụ thể'],
+    flow:['Maintenance Mart + IoT alarm frequency','Failure probability scoring model','NPM-DX là thiết bị ưu tiên'],
+    note:['Predictive AI — BI không làm được','Cần 6+ tháng baseline data','Validate precision/recall với Maintenance team']},
+  NS02:{badge:'UC-NS02 · Hàng tuần',name:'Dự báo nguy cơ nghỉ việc',tech:'HR Mart · churn prediction model',
+    role:['Nhân viên nào tín hiệu churn cao?','Tín hiệu: OT kéo dài + vắng + năng suất giảm','Đề xuất can thiệp giữ chân sớm theo từng người'],
+    flow:['HR Mart: attendance + payroll + performance','Churn prediction composite score','Phân quyền chặt: chỉ HR + quản lý trực tiếp'],
+    note:['Đặc biệt quan trọng với thợ hàn kỹ năng SMT','Churn model cần HR validate trước deploy','Privacy: không show churn score cho người đó']},
+  NS04:{badge:'UC-NS04 · Hàng tuần',name:'Skill matrix & khoảng trống',tech:'HR Mart + Production Mart · impact scoring',
+    role:['Bản đồ kỹ năng toàn xưởng theo tổ/line','Kỹ năng thiếu hụt ảnh hưởng capacity line nào?','AI đề xuất đào tạo ưu tiên theo impact SX'],
+    flow:['Cross HR skill data vs Production capacity','Impact scoring: thiếu kỹ năng X → line Y -N%','Training roadmap gửi trưởng bộ phận'],
+    note:['Kỹ năng hàn SMT là bottleneck theo tài liệu','Skill matrix update ít nhất hàng quý','Output: training plan tháng/quý']},
+  KT03:{badge:'UC-KT03 · Hàng tuần',name:'Dự báo & cảnh báo dòng tiền',tech:'Finance Mart · rolling 4-week forecast',
+    role:['Dự báo dòng tiền 4 tuần tới','Tuần nào có nguy cơ âm?','Đề xuất ưu tiên thu hồi / giãn chi theo impact'],
+    flow:['Finance Mart + AR/AP payment schedule','Rolling 4-week cash flow forecast model','CFO nhận alert khi dự báo chạm ngưỡng'],
+    note:['Cảnh báo trước 30-60 ngày theo yêu cầu','Kết hợp lịch thanh toán NCC và thu từ khách','Validate với CFO định kỳ']},
+  KO04:{badge:'UC-KO04 · Hàng tuần',name:'Tồn kho vs kế hoạch SX',tech:'Inventory + Planning Mart · BOM explosion',
+    role:['Vật tư nào thiếu cho WO tuần tới?','Vật tư nào thừa do kế hoạch thay đổi?','Đề xuất điều chuyển hoặc hoãn mua'],
+    flow:['BOM explosion × WO schedule Planning Mart','So sánh với Inventory Mart real-time','Chạy mỗi thứ 6 để chuẩn bị tuần tới'],
+    note:['Liên kết chặt với AI Planning','Output: material readiness report','Kết nối Procurement nếu cần mua gấp']},
+  LD05:{badge:'UC-LD05 · Tháng/quý',name:'Báo cáo điều hành tháng',tech:'Finance + Production + Quality + HR Mart',
+    role:['Tổng hợp P&L + OEE + QCDMSE theo tháng','Narrative phân tích nguyên nhân biến động chính','So sánh với kế hoạch năm'],
+    flow:['Đọc Finance + Production + Quality + HR Mart','Claude sinh Word/PDF tự động','Format cố định — BLĐ duyệt lần đầu'],
+    note:['Gửi trước họp hội đồng ít nhất 2 ngày','Số liệu phải có trích dẫn nguồn','Lưu lịch sử để trending dài hạn']},
+  LD06:{badge:'UC-LD06 · Tháng/quý',name:'Phân tích rủi ro chiến lược',tech:'Revenue + Procurement + Quality Mart',
+    role:['Phân tích tập trung doanh thu và rủi ro mất khách lớn','Single-source risk linh kiện trọng yếu','Đề xuất chiến lược giảm rủi ro cụ thể'],
+    flow:['Revenue + Procurement + Quality Mart','So sánh benchmark ngành EMS','Cập nhật hàng quý'],
+    note:['Input cho họp chiến lược hàng quý','Kết hợp dữ liệu thị trường ngoài nếu có','Output: risk register cập nhật']},
+  KT04:{badge:'UC-KT04 · Tháng/quý',name:'Phân tích biến động P&L',tech:'Finance Mart · variance analysis',
+    role:['P&L tháng so kế hoạch và tháng trước','AI bóc tách variance theo doanh thu/giá vốn/chi phí','Narrative tiếng Việt giải thích nguyên nhân chính'],
+    flow:['Finance Mart monthly aggregate','Claude variance analysis + narrative','Số liệu khớp 100% Bravo'],
+    note:['Khớp 100% Bravo — tiêu chí nghiệm thu','Không chỉ số — phải có narrative','Format cố định cho họp BGĐ']},
+  KT06:{badge:'UC-KT06 · Tháng/quý',name:'Dự báo doanh thu 3 tháng',tech:'Finance + Revenue Mart · time-series',
+    role:['Forecast Q+1 dựa trên booking + lịch sử mùa vụ','3 kịch bản: base/optimistic/pessimistic','Confidence interval so target năm'],
+    flow:['Finance + Revenue Mart','Time-series + booking pipeline weighting','Sai số ≤10% — tiêu chí nghiệm thu'],
+    note:['Chu kỳ bán hàng dài — đặc thù EMS','Lưu lịch sử forecast để tracking accuracy','Cập nhật hàng tháng với số booking mới']},
+  BH06:{badge:'UC-BH06 · Tháng/quý',name:'Forecast bán hàng tháng/quý',tech:'Revenue Mart · weighted forecast',
+    role:['Forecast Q+1 theo pipeline + mùa vụ Hanel PT','3 kịch bản + confidence interval','So sánh vs target năm và deviation tracking'],
+    flow:['Revenue Mart + forecast Excel từ khách','Claude weighted forecast theo stage deal'],
+    note:['Sai số target ≤15% rolling 3 tháng','Chu kỳ bán hàng dài EMS cần lịch sử đủ','Lưu lịch sử để tự cải thiện model']},
+  SX06:{badge:'UC-SX06 · Tháng/quý',name:'OEE trend & đề xuất cải tiến',tech:'Production Mart · 3-6 tháng trend',
+    role:['OEE trend 3-6 tháng theo line/sản phẩm','So sánh benchmark EMS industry','Đề xuất cải tiến ranking theo ROI'],
+    flow:['Production Mart monthly rollup','Claude sinh báo cáo cải tiến','Kèm benchmark nếu có dữ liệu ngành'],
+    note:['Cần ít nhất 3 tháng data để trend có nghĩa','Đầu vào review OEE hàng quý với BLĐ','Ranking hành động cần IE validate']},
+  MH05:{badge:'UC-MH05 · Tháng/quý',name:'Phân tích biến động giá mua',tech:'Procurement + Finance Mart · price variance',
+    role:['Giá mua thực tế vs giá định mức theo NCC','NCC nào tăng giá nhiều nhất?','Tác động lên giá thành sản phẩm'],
+    flow:['Procurement + Finance Mart','Price variance analysis','Kết hợp tỷ giá nếu mua ngoại tệ'],
+    note:['Input cho đàm phán hợp đồng NCC','Liên kết với Finance Mart để tính impact giá thành','Cập nhật khi có thay đổi giá lớn']},
+  BT03:{badge:'UC-BT03 · Tháng/quý',name:'Kế hoạch bảo trì vs SX',tech:'Maintenance + Planning Mart · conflict detection',
+    role:['Lịch bảo trì phòng ngừa tháng tới','Phát hiện xung đột với kế hoạch SX','Ưu tiên theo rủi ro thiết bị và OTD deadline'],
+    flow:['Cross Maintenance + Planning Mart','Conflict detection: maintenance window vs WO','Output gửi quản đốc + lead planner'],
+    note:['Tránh downtime bất ngờ ảnh hưởng OTD','Maintenance và Planning cần đồng thuận','Lịch bảo trì lock ≥3 ngày trước']},
+  BT05:{badge:'UC-BT05 · Tháng/quý',name:'Dự báo phụ tùng cần mua',tech:'Maintenance Mart · MTBF forecast',
+    role:['Phụ tùng nào sắp cần thay theo MTBF?','Lead-time từng loại phụ tùng','Đề xuất đặt hàng trước bao lâu?'],
+    flow:['Maintenance Mart spare parts + MTBF history','MTBF-based replacement forecast','Trigger mua hàng sang Procurement'],
+    note:['NPM-DX linear motor: lead-time 6 tuần','Critical spares cần safety stock riêng','Kết nối Procurement Mart để auto-suggest PO']},
+  KTE03:{badge:'UC-KT_E03 · Tháng/quý',name:'Phân tích tác động ECO/ECN',tech:'Engineering + Quality Mart · before-after',
+    role:['ECO tháng này ảnh hưởng line/công đoạn nào?','So sánh PPM/FPY trước và sau ECO áp dụng','Cảnh báo ECO đang làm xấu chất lượng'],
+    flow:['Engineering Mart ECO log + Quality Mart PPM','Before-after analysis theo ECO apply date','Alert khi PPM tăng >10% sau ECO'],
+    note:['Cần Quality Mart granular theo ngày','Kỹ thuật trưởng nhận alert ECO xấu','Lưu lịch sử ECO impact để học']},
+  SX07:{badge:'UC-SX07 · Nâng cao',name:'Chẩn đoán 4M → OEE',tech:'5 Mart: Production+HR+Inventory+Engineering+Maintenance',
+    role:['Khi OEE giảm: tự chẩn đoán do Man/Machine/Material/Method?','Cross-check HR absenteeism + IoT + tồn kho + ECO','Đề xuất action cụ thể từng nguyên nhân gốc'],
+    flow:['Cross 5 mart: Production+HR+Inventory+Engineering+Maintenance','Multi-mart AI diagnosis — use case phức tạp nhất','Kỹ sư IE xác nhận kết quả'],
+    note:['Data quality tốt ở tất cả mart là điều kiện tiên quyết','Use case giá trị nhất phân hệ Sản xuất','Đây là điểm khác biệt AI vs BI hoàn toàn']},
+  CL07:{badge:'UC-CL07 · Nâng cao',name:'Hỏi đáp tiêu chuẩn IPC/ISO & SOP',tech:'Knowledge Brain RAG · semantic search · cited',
+    role:['Hỏi tiếng Việt tự nhiên: IPC-A-610 Class 3 quy định X thế nào?','Trả lời kèm số điều khoản, trang, phiên bản tài liệu','No hallucination — thiếu căn cứ phải nói rõ'],
+    flow:['Knowledge Brain RAG — index IPC-A-610, ISO 9001, tiêu chuẩn KH','Semantic retrieval + cited answer generation','Phân quyền theo tài liệu được phép xem'],
+    note:['No hallucination là tiêu chí nghiệm thu cứng','Update index khi phiên bản tiêu chuẩn mới','Embedding model fine-tune thuật ngữ điện tử']},
+  KTE04:{badge:'UC-KT_E04 · Nâng cao',name:'Hỗ trợ phân tích 5-Why / RCA',tech:'Knowledge Brain + Quality Mart · similarity search',
+    role:['Kỹ sư nhập sự cố — AI gợi ý cấu trúc 5-Why','Đề xuất giả thuyết nguyên nhân từ dữ liệu lịch sử','Tìm NCR/8D tương tự qua RAG để tham chiếu'],
+    flow:['Knowledge Brain + Quality Mart NCR/8D history','Similarity search 8D cũ qua RAG','Kỹ sư quyết định cuối — AI hỗ trợ'],
+    note:['Tiết kiệm 50-70% thời gian RCA ban đầu','Kỹ sư vẫn là người quyết định','Validate giả thuyết với dữ liệu thực trước khi kết luận']}
+};
+
+// UC TABLE DATA
+const ucRows = [
+  {id:'UC-LD01',name:'Cảnh báo rủi ro sáng',group:'Hàng ngày',gc:'#a06000',mart:'Tổng hợp đa Mart',claude:'Tổng hợp đa-mart, phân mức xanh/vàng/đỏ tự động, highlight top 3 vấn đề, gửi digest 7h sáng'},
+  {id:'UC-BH02',name:'Cảnh báo PO bất thường',group:'Hàng ngày',gc:'#a06000',mart:'Revenue Mart',claude:'Phát hiện sụt PO ≥15%, cảnh báo đơn hết hạn confirm, push alert đến sales phụ trách'},
+  {id:'UC-SX02',name:'Cảnh báo & chẩn đoán dừng chuyền',group:'Hàng ngày',gc:'#a06000',mart:'Production Mart',claude:'Alert khi dừng >15 phút, pattern matching lịch sử downtime, gợi ý nguyên nhân, escalate sau 30 phút'},
+  {id:'UC-CL02',name:'Phát hiện xu hướng lỗi sớm',group:'Hàng ngày',gc:'#a06000',mart:'Quality Mart',claude:'SPC + trend analysis, phát hiện lỗi tăng trong 3-7 ngày, cảnh báo trước khi bùng phát'},
+  {id:'UC-KO01',name:'Cảnh báo MSL & safety stock',group:'Hàng ngày',gc:'#a06000',mart:'Inventory Mart',claude:'Alert MSL hết hạn 7-14 ngày + dưới safety stock, cross với Planning Mart tính WO impact'},
+  {id:'UC-KT_E01',name:'Tra cứu SOP/WI ngôn ngữ tự nhiên',group:'Hàng ngày',gc:'#a06000',mart:'Knowledge Index (RAG)',claude:'RAG semantic search SOP/WI, trả lời kèm số tài liệu, bước, phiên bản — no hallucination'},
+  {id:'UC-LD03',name:'Báo cáo 4M tuần',group:'Hàng tuần',gc:'#1040a0',mart:'HR+Production+Inventory+Engineering',claude:'Tổng hợp Man/Machine/Material/Method, sinh narrative chẩn đoán nút thắt chéo phân hệ'},
+  {id:'UC-LD04',name:'Cảnh báo rủi ro doanh nghiệp',group:'Hàng tuần',gc:'#1040a0',mart:'Tổng hợp đa Mart',claude:'Quét 7 nhóm rủi ro, phân mức xanh-vàng-đỏ, gắn trigger rủi ro nào vừa tăng mức'},
+  {id:'UC-KH02',name:'Cảnh báo WO trễ tiến độ',group:'Hàng tuần',gc:'#1040a0',mart:'Planning+Inventory+HR Mart',claude:'Cross 3 mart để chẩn đoán nguyên nhân trễ (vật tư/nhân lực/máy), đề xuất điều chỉnh ưu tiên'},
+  {id:'UC-KH03',name:'Cân đối năng lực 4-8 tuần',group:'Hàng tuần',gc:'#1040a0',mart:'Planning Mart',claude:'Tính load chart demand vs capacity, phát hiện bottleneck, đề xuất giãn tải/thêm ca/chuyển line'},
+  {id:'UC-KH04',name:'Mô phỏng what-if',group:'Hàng tuần',gc:'#1040a0',mart:'Planning+HR+Maintenance Mart',claude:'Simulation kịch bản (thêm ca, thiếu người, dời lịch BT), tính impact giao hàng trong vài giây'},
+  {id:'UC-BH05',name:'Insight & dự báo khách hàng',group:'Hàng tuần',gc:'#1040a0',mart:'Revenue+Quality+Finance Mart',claude:'Phân khúc churn risk, cross 3 mart đánh giá sức khỏe quan hệ KH, đề xuất next action'},
+  {id:'UC-CL03',name:'Tổng hợp & theo dõi 8D/CAR/NCR',group:'Hàng tuần',gc:'#1040a0',mart:'Quality Mart + RAG',claude:'Đọc file Word/PDF qua RAG, trích xuất ngày/owner/status tự động, phát hiện CAR tái diễn'},
+  {id:'UC-MH03',name:'Dự báo thiếu hụt vật tư',group:'Hàng tuần',gc:'#1040a0',mart:'Inventory+Planning+Procurement',claude:'MRP-style demand vs supply matching cross 3 mart, đề xuất PO khẩn hoặc nguồn thay thế'},
+  {id:'UC-MH04',name:'Cảnh báo single-source risk',group:'Hàng tuần',gc:'#1040a0',mart:'Procurement Mart',claude:'Mapping linh kiện vs NCC, risk scoring, đề xuất phát triển nguồn thứ hai cho IC trọng yếu'},
+  {id:'UC-BT02',name:'Dự báo hỏng & bảo trì phòng ngừa',group:'Hàng tuần',gc:'#1040a0',mart:'Maintenance Mart + IoT',claude:'Failure probability từ alarm pattern + lịch sử, đề xuất lịch bảo trì phòng ngừa cụ thể'},
+  {id:'UC-NS02',name:'Dự báo nguy cơ nghỉ việc',group:'Hàng tuần',gc:'#1040a0',mart:'HR Mart',claude:'Churn prediction từ OT trend + vắng mặt + năng suất, đề xuất can thiệp giữ chân sớm'},
+  {id:'UC-NS04',name:'Skill matrix & khoảng trống',group:'Hàng tuần',gc:'#1040a0',mart:'HR + Production Mart',claude:'Cross skill data vs production capacity, impact scoring, đề xuất training roadmap theo SX'},
+  {id:'UC-KT03',name:'Dự báo & cảnh báo dòng tiền',group:'Hàng tuần',gc:'#1040a0',mart:'Finance Mart',claude:'Rolling 4-week forecast, xác định tuần nguy cơ âm, đề xuất ưu tiên thu hồi/giãn chi'},
+  {id:'UC-KO04',name:'Tồn kho vs kế hoạch SX',group:'Hàng tuần',gc:'#1040a0',mart:'Inventory + Planning Mart',claude:'BOM explosion × WO schedule, phát hiện gap thiếu/thừa vật tư, đề xuất điều chuyển'},
+  {id:'UC-LD05',name:'Báo cáo điều hành tháng',group:'Tháng/quý',gc:'#1a6020',mart:'Finance+Production+Quality+HR',claude:'Sinh Word/PDF tự động: P&L + OEE + QCDMSE với narrative nguyên nhân biến động chính'},
+  {id:'UC-LD06',name:'Phân tích rủi ro chiến lược',group:'Tháng/quý',gc:'#1a6020',mart:'Revenue+Procurement+Quality',claude:'Phân tích tập trung KH/NCC, single-source risk, đề xuất chiến lược giảm rủi ro dài hạn'},
+  {id:'UC-KT04',name:'Phân tích biến động P&L',group:'Tháng/quý',gc:'#1a6020',mart:'Finance Mart',claude:'Bóc tách variance doanh thu/giá vốn/chi phí, sinh narrative tiếng Việt nguyên nhân biến động'},
+  {id:'UC-KT06',name:'Dự báo doanh thu 3 tháng',group:'Tháng/quý',gc:'#1a6020',mart:'Finance + Revenue Mart',claude:'Time-series + pipeline weighting, 3 kịch bản, confidence interval, sai số target ≤10%'},
+  {id:'UC-BH06',name:'Forecast bán hàng tháng/quý',group:'Tháng/quý',gc:'#1a6020',mart:'Revenue Mart',claude:'Weighted forecast theo stage deal + mùa vụ, 3 kịch bản, deviation tracking vs target năm'},
+  {id:'UC-SX06',name:'OEE trend & đề xuất cải tiến',group:'Tháng/quý',gc:'#1a6020',mart:'Production Mart',claude:'Trend 3-6 tháng, so benchmark EMS industry, sinh báo cáo cải tiến ranking hành động theo ROI'},
+  {id:'UC-MH05',name:'Phân tích biến động giá mua',group:'Tháng/quý',gc:'#1a6020',mart:'Procurement + Finance Mart',claude:'Price variance NCC vs định mức, tính impact giá thành sản phẩm, input đàm phán hợp đồng'},
+  {id:'UC-BT03',name:'Kế hoạch bảo trì vs SX',group:'Tháng/quý',gc:'#1a6020',mart:'Maintenance + Planning Mart',claude:'Conflict detection maintenance window vs WO schedule, ưu tiên theo rủi ro và OTD deadline'},
+  {id:'UC-BT05',name:'Dự báo phụ tùng cần mua',group:'Tháng/quý',gc:'#1a6020',mart:'Maintenance Mart',claude:'MTBF-based replacement forecast, tính thời điểm đặt hàng theo lead-time, trigger PO suggestion'},
+  {id:'UC-KT_E03',name:'Phân tích tác động ECO/ECN',group:'Tháng/quý',gc:'#1a6020',mart:'Engineering + Quality Mart',claude:'Before-after PPM/FPY theo ECO date, cảnh báo ECO đang làm xấu chất lượng, dẫn chiếu SOP'},
+  {id:'UC-SX07',name:'Chẩn đoán 4M → OEE',group:'Nâng cao',gc:'#4020a0',mart:'5 Mart: Production+HR+Inventory+Engineering+Maintenance',claude:'Cross 5 mart để chẩn đoán nguyên nhân gốc sụt OEE, đề xuất action cụ thể từng nguyên nhân'},
+  {id:'UC-CL07',name:'Hỏi đáp IPC/ISO & SOP',group:'Nâng cao',gc:'#4020a0',mart:'Knowledge Index (RAG)',claude:'Q&A tiếng Việt tự nhiên từ IPC-A-610/ISO/SOP qua RAG, cited answer, no hallucination cứng'},
+  {id:'UC-KT_E04',name:'Hỗ trợ 5-Why / RCA',group:'Nâng cao',gc:'#4020a0',mart:'Knowledge Brain + Quality Mart',claude:'Gợi ý 5-Why structure, đề xuất giả thuyết từ dữ liệu lịch sử, tìm 8D tương tự qua RAG'}
+];
+
+// Build UC table
+(function(){
+  const tb = document.getElementById('uc-tbody');
+  if(!tb) return;
+  tb.innerHTML = ucRows.map(r=>`<tr>
+    <td><span class="uc-badge2" style="background:${r.gc}">${r.id}</span></td>
+    <td style="font-weight:500">${r.name}</td>
+    <td><span class="uc-badge2" style="background:${r.gc}">${r.group}</span></td>
+    <td style="font-size:11px;color:#7c5cfc">${r.mart}</td>
+    <td style="font-size:11px;color:#555">${r.claude}</td>
+  </tr>`).join('');
+})();
+
+// ── SVG CONNECTORS ─────────────────────────────────────────────────────────────
+const DOTS=[];
+function getR(id){
+  const el=document.getElementById(id);if(!el)return null;
+  const gr=document.getElementById('mgrid').getBoundingClientRect();
+  const r=el.getBoundingClientRect();
+  return{x:r.left-gr.left,y:r.top-gr.top,w:r.width,h:r.height,
+    cx:r.left-gr.left+r.width/2,cy:r.top-gr.top+r.height/2,
+    rx:r.left-gr.left+r.width,lx:r.left-gr.left};
+}
+function conn(svg,x1,y1,x2,y2,color,dur,delay){
+  const ns='http://www.w3.org/2000/svg';
+  const mx=(x1+x2)/2;
+  const d=`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+  const path=document.createElementNS(ns,'path');
+  path.setAttribute('d',d);path.setAttribute('fill','none');
+  path.setAttribute('stroke',color);path.setAttribute('stroke-width','1.5');
+  path.setAttribute('opacity','0.45');
+  path.setAttribute('marker-end','url(#ah)');
+  svg.appendChild(path);
+  const dot=document.createElementNS(ns,'circle');
+  dot.setAttribute('r','3.5');dot.setAttribute('fill',color);dot.setAttribute('opacity','0');
+  svg.appendChild(dot);
+  DOTS.push({dot,path,dur:dur*1000,delay:delay*1000,start:null});
+}
+function connLabel(svg,x,y,text,color){
+  const ns='http://www.w3.org/2000/svg';
+  const tx=document.createElementNS(ns,'text');
+  tx.setAttribute('x',x);tx.setAttribute('y',y);tx.setAttribute('text-anchor','middle');
+  tx.setAttribute('font-size','8.5');tx.setAttribute('fill',color);tx.setAttribute('font-weight','700');
+  tx.setAttribute('font-family','Be Vietnam Pro,sans-serif');tx.textContent=text;
+  svg.appendChild(tx);
+}
+function animDots(ts){
+  DOTS.forEach(d=>{
+    if(d.start===null){if(ts<d.delay){d.dot.setAttribute('opacity','0');return;}d.start=ts-d.delay;}
+    const elapsed=(ts-d.start)%d.dur;const t=elapsed/d.dur;
+    const len=d.path.getTotalLength();const pt=d.path.getPointAtLength(t*len);
+    d.dot.setAttribute('cx',pt.x);d.dot.setAttribute('cy',pt.y);
+    d.dot.setAttribute('opacity',t<0.05||t>0.95?'0':'1');
+  });
+  requestAnimationFrame(animDots);
+}
+function drawConnectors(){
+  const svg=document.getElementById('overlay');
+  while(svg.children.length>1)svg.removeChild(svg.lastChild);
+  DOTS.length=0;
+  const gr=document.getElementById('mgrid');
+  svg.setAttribute('width',gr.offsetWidth);svg.setAttribute('height',gr.offsetHeight);
+  const lk=getR('b-lake');const dwh=getR('b-dwh');
+  if(!lk||!dwh)return;
+  // COL1 → COL2 Data Lake
+  const srcs=[['s-bravo',0],['s-files',0.4],['s-crm',0.8],['s-iot',1.2]];
+  srcs.forEach(([id,dl])=>{const s=getR(id);if(!s)return;conn(svg,s.rx,s.cy,lk.lx,lk.cy,'#c8a060',2.2,dl);});
+  // COL2 DWH → COL3 Datamarts
+  const marts=[['b-mfin',0],['b-mrev',0.25],['b-mpro',0.5],['b-minv',0.75],['b-mpln',1.0],['b-mprd',1.25],['b-mqua',1.5],['b-meng',1.75],['b-mmnt',2.0],['b-mhr',2.25],['b-mrag',2.5]];
+  marts.forEach(([id,dl])=>{const m=getR(id);if(!dwh||!m)return;conn(svg,dwh.rx,dwh.cy,m.lx,m.cy,'#7c5cfc',2.5,dl);});
+  const m0=getR('b-mfin');
+  if(dwh&&m0){connLabel(svg,(dwh.rx+m0.lx)/2,Math.min(dwh.cy,m0.cy)-18,'Data pipeline 2 (VM) — Dataform','#7c5cfc');}
+  // COL3 → COL4
+  const col4el=document.querySelectorAll('.mcell')[3];
+  if(!col4el)return;
+  const grRect=document.getElementById('mgrid').getBoundingClientRect();
+  const col4lx=col4el.getBoundingClientRect().left-grRect.left;
+  marts.forEach(([mid],i)=>{const m=getR(mid);if(!m)return;conn(svg,m.rx,m.cy,col4lx,m.cy,'#2dc98a',2.1,i*0.22);});
+  requestAnimationFrame(animDots);
+}
+window.addEventListener('load',()=>setTimeout(drawConnectors,300));
+window.addEventListener('resize',()=>{DOTS.length=0;drawConnectors();});
+
+// ── PICK ───────────────────────────────────────────────────────────────────────
+let cur=null;
+function pick(id){
+  document.querySelectorAll('.bx,.sbox,.uc-item').forEach(e=>e.classList.remove('active'));
+  const dr=document.getElementById('drawer');
+  if(cur===id){cur=null;dr.style.display='none';return;}
+  cur=id;
+  const elId = ['b-','s-','u-'].map(p=>p+id).find(k=>document.getElementById(k));
+  if(elId){const el=document.getElementById(elId);if(el)el.classList.add('active');}
+  const a=D[id];if(!a)return;
+  document.getElementById('db').textContent=a.badge||'';
+  document.getElementById('dn').textContent=a.name;
+  document.getElementById('dt').textContent=a.tech;
+  const cols=[{l:'Vai trò',r:a.role||[]},{l:'Dòng chảy dữ liệu',r:a.flow||[]},{l:'Lưu ý',r:a.note||[]}];
+  document.getElementById('dd').innerHTML=cols.map(c=>`<div><div class="dlbl">${c.l}</div>${c.r.map(r=>`<div class="drow"><div class="ddot"></div><div class="dtext">${r}</div></div>`).join('')}</div>`).join('');
+  dr.style.display='block';
+  setTimeout(()=>dr.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+function switchTab(id,el){
+  document.querySelectorAll('.tabpage').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tabnav a').forEach(a=>a.classList.remove('on'));
+  document.getElementById('tab-'+id).classList.add('on');el.classList.add('on');
+  if(id==='overview')setTimeout(drawConnectors,100);
+}
+function close_(){cur=null;document.getElementById('drawer').style.display='none';document.querySelectorAll('.bx,.sbox,.uc-item').forEach(e=>e.classList.remove('active'));}
+</script>
+</body>
+</html>
